@@ -1,0 +1,52 @@
+We have a React UI app (LexDraft) with a Settings page that contains multiple tabs/sections (General, AI & Providers, Documents, Agent Behavior, Privacy & Security, Notifications). Currently, when switching tabs, the tab buttons shift up/down because the content height changes. Also, the active tab styling has too much contrast (dark background + dark text), making it less readable. We also need a real Light/Dark mode that can be toggled in Settings and from the TopBar near the settings/avatar.
+
+Please implement the following changes WITHOUT redesigning the app. Keep the current professional, calm styling.
+
+1) Fix Settings tab navigation position (no layout shift)
+- The Settings view should have a two-column layout:
+  - Left column: tab navigation (vertical list of tab buttons)
+  - Right column: tab content area
+- The left tab navigation must have a stable, permanent position:
+  - Make it a fixed-width column (e.g., 240px–280px)
+  - It should not move when content height changes
+  - Use `position: sticky; top: <topbarHeight>` OR keep it in a flex container with a fixed height and `overflow: auto` for content
+- The right content area should scroll independently if the content is long, so the tab nav remains visible.
+
+2) Improve active tab styling (reduce contrast, increase readability)
+- Active tab background should NOT be very dark.
+- Use a subtle highlight background (light gray in light mode, slightly lighter/dimmed surface in dark mode).
+- Active tab text should be clearly readable (light mode: dark text; dark mode: light text).
+- Add a left border or indicator for the active tab (subtle accent).
+- Ensure hover states are also subtle and consistent.
+
+3) Implement Light/Dark theme support across the app
+- Add theme state with values: "light" | "dark" | "system" (system optional if already present).
+- Persist theme preference in localStorage (e.g., key: "lexdraft_theme").
+- Apply theme class to the root element (e.g., <html> or <body>) so it affects all pages.
+- If using CSS variables, define tokens for:
+  - background, surface, border, text, muted text, primary, subtle highlight
+- Make sure both Settings and main app layout adapt correctly.
+
+4) Add theme controls in Settings
+- In Settings > General (or Appearance section):
+  - Add Theme selector: Light / Dark / System
+  - When changed, immediately apply theme and persist to localStorage.
+  - Show a small helper text: "Applies across the entire app."
+
+5) Add a theme toggle button in the TopBar
+- Near settings gear + avatar area, add a compact toggle icon button:
+  - Sun icon for light mode, Moon icon for dark mode
+  - Clicking toggles between light and dark (if system mode exists, toggling switches to explicit light/dark).
+- The toggle should reflect current theme visually.
+- Keep it aligned and consistent with existing TopBar spacing.
+
+6) QA acceptance checklist
+- Switching settings tabs does not move the tab list position.
+- Long content scrolls within the content pane, not pushing the tab list.
+- Active tab is readable in both themes.
+- Theme changes persist after refresh.
+- Theme toggle works from TopBar and stays in sync with Settings.
+
+Output:
+- Update the necessary components (Settings view layout, tab styles, theme provider/hook, TopBar).
+- Provide a short list of files changed/added.

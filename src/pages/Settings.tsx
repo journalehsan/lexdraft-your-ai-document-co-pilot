@@ -29,12 +29,13 @@ import {
   AlertTriangle,
   Info
 } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 const DEFAULT_SETTINGS = {
   general: {
     workspaceMode: 'Global AI',
     provider: 'OpenRouter',
-    theme: 'System',
+    theme: 'system',
     language: 'English',
     timezone: 'EST'
   },
@@ -81,12 +82,14 @@ const DEFAULT_SETTINGS = {
 export default function Settings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [showKey, setShowKey] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const saved = localStorage.getItem('lexdraft_settings');
     if (saved) {
       try {
-        setSettings(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setSettings(parsed);
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
@@ -100,6 +103,7 @@ export default function Settings() {
 
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
+    setTheme('system');
     toast.info('Settings reset to defaults');
   };
 
@@ -111,6 +115,10 @@ export default function Settings() {
         [key]: value
       }
     }));
+
+    if (section === 'general' && key === 'theme') {
+      setTheme(value as any);
+    }
   };
 
   return (
@@ -126,41 +134,59 @@ export default function Settings() {
           />
         </div>
 
-        <main className="flex-1 overflow-hidden flex flex-col">
+        <main className="flex-1 flex flex-col min-w-0 h-full relative">
           <div className="p-4 md:p-8 border-b border-border bg-card/50">
-            <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-serif font-bold text-foreground">Settings</h1>
-                <p className="text-muted-foreground text-sm">Configure your workspace, AI providers, and application behavior.</p>
-              </div>
+            <div className="max-w-5xl mx-auto">
+              <h1 className="text-3xl font-serif font-bold text-foreground">Settings</h1>
+              <p className="text-muted-foreground text-sm">Configure your workspace, AI providers, and application behavior.</p>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="max-w-5xl mx-auto p-4 md:p-8">
-              <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-8">
-                <TabsList className="flex flex-col h-auto bg-transparent border-none space-y-1 items-start min-w-[200px]">
-                  <TabsTrigger value="general" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <Globe className="h-4 w-4" /> General
-                  </TabsTrigger>
-                  <TabsTrigger value="ai" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <Cpu className="h-4 w-4" /> AI & Providers
-                  </TabsTrigger>
-                  <TabsTrigger value="documents" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <FileText className="h-4 w-4" /> Documents
-                  </TabsTrigger>
-                  <TabsTrigger value="agent" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <UserRound className="h-4 w-4" /> Agent Behavior
-                  </TabsTrigger>
-                  <TabsTrigger value="privacy" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <ShieldCheck className="h-4 w-4" /> Privacy & Security
-                  </TabsTrigger>
-                  <TabsTrigger value="notifications" className="w-full justify-start gap-2 data-[state=active]:bg-secondary">
-                    <Bell className="h-4 w-4" /> Notifications
-                  </TabsTrigger>
-                </TabsList>
+          <div className="flex-1 overflow-hidden">
+            <div className="max-w-5xl mx-auto h-full">
+              <Tabs defaultValue="general" className="flex flex-col md:flex-row h-full overflow-hidden">
+                <div className="w-full md:w-[260px] border-b md:border-b-0 md:border-r border-border p-4 h-full overflow-y-auto">
+                  <TabsList className="flex flex-col h-auto bg-transparent border-none space-y-1 items-start w-full">
+                    <TabsTrigger 
+                      value="general" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <Globe className="h-4 w-4" /> General
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="ai" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <Cpu className="h-4 w-4" /> AI & Providers
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="documents" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <FileText className="h-4 w-4" /> Documents
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="agent" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <UserRound className="h-4 w-4" /> Agent Behavior
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="privacy" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> Privacy & Security
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="notifications" 
+                      className="w-full justify-start gap-2 px-3 py-2.5 text-sm font-medium transition-colors rounded-md data-[state=active]:bg-primary/5 data-[state=active]:text-primary border-l-4 border-transparent data-[state=active]:border-primary hover:bg-accent/50"
+                    >
+                      <Bell className="h-4 w-4" /> Notifications
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-                <div className="flex-1">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
                   <TabsContent value="general" className="mt-0 space-y-6">
                     <Card>
                       <CardHeader>
@@ -209,11 +235,12 @@ export default function Settings() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Light">Light</SelectItem>
-                                <SelectItem value="Dark">Dark</SelectItem>
-                                <SelectItem value="System">System</SelectItem>
+                                <SelectItem value="light">Light</SelectItem>
+                                <SelectItem value="dark">Dark</SelectItem>
+                                <SelectItem value="system">System</SelectItem>
                               </SelectContent>
                             </Select>
+                            <p className="text-xs text-muted-foreground">Applies across the entire app.</p>
                           </div>
                           <div className="space-y-2">
                             <Label>Language</Label>
@@ -672,7 +699,7 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="sticky bottom-0 bg-card border-t border-border p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-10 shadow-lg">
             <div className="max-w-5xl mx-auto flex justify-end gap-2">
               <Button variant="outline" onClick={handleReset} className="gap-2">
                 <RotateCcw className="h-4 w-4" /> Reset to Defaults
