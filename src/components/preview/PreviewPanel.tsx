@@ -118,8 +118,8 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="preview" className="flex-1 m-0">
-          <ScrollArea className="h-full">
+        <TabsContent value="preview" className="flex-1 m-0 overflow-hidden">
+          <ScrollArea className="h-full w-full">
             <div className="max-w-3xl mx-auto p-6">
               {isGenerating && !typewriterComplete ? (
                 <div className="font-serif">
@@ -143,8 +143,8 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="diff" className="flex-1 m-0">
-          <ScrollArea className="h-full">
+        <TabsContent value="diff" className="flex-1 m-0 overflow-hidden">
+          <ScrollArea className="h-full w-full">
             <div className="p-6">
               <div className="bg-card border border-border rounded-lg p-4">
                 <h3 className="text-sm font-medium mb-3">Changes from last version</h3>
@@ -180,8 +180,8 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="sources" className="flex-1 m-0">
-          <ScrollArea className="h-full">
+        <TabsContent value="sources" className="flex-1 m-0 overflow-hidden">
+          <ScrollArea className="h-full w-full">
             <div className="p-6 space-y-3">
               <h3 className="text-sm font-medium mb-4">Referenced Sources</h3>
               {[

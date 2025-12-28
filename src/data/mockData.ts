@@ -1,7 +1,10 @@
+export type FileStatus = 'Draft' | 'Reviewed' | 'Final';
+
 export interface ProjectFile {
   id: string;
   name: string;
   type: 'md' | 'tex' | 'txt';
+  status: FileStatus;
 }
 
 export interface Project {
@@ -26,10 +29,10 @@ export const projects: Project[] = [
     name: 'Merger Agreement - Acme Corp',
     lastUpdated: '2 hours ago',
     files: [
-      { id: '1a', name: 'merger-agreement.md', type: 'md' },
-      { id: '1b', name: 'due-diligence-notes.md', type: 'md' },
-      { id: '1c', name: 'schedules.tex', type: 'tex' },
-      { id: '1d', name: 'closing-checklist.md', type: 'md' },
+      { id: '1a', name: 'merger-agreement.md', type: 'md', status: 'Draft' },
+      { id: '1b', name: 'due-diligence-notes.md', type: 'md', status: 'Reviewed' },
+      { id: '1c', name: 'schedules.tex', type: 'tex', status: 'Draft' },
+      { id: '1d', name: 'closing-checklist.md', type: 'md', status: 'Final' },
     ],
   },
   {
@@ -37,9 +40,9 @@ export const projects: Project[] = [
     name: 'Employment Contract - TechStart',
     lastUpdated: '5 hours ago',
     files: [
-      { id: '2a', name: 'employment-contract.md', type: 'md' },
-      { id: '2b', name: 'non-compete.md', type: 'md' },
-      { id: '2c', name: 'benefits-schedule.tex', type: 'tex' },
+      { id: '2a', name: 'employment-contract.md', type: 'md', status: 'Final' },
+      { id: '2b', name: 'non-compete.md', type: 'md', status: 'Reviewed' },
+      { id: '2c', name: 'benefits-schedule.tex', type: 'tex', status: 'Draft' },
     ],
   },
   {
@@ -47,9 +50,9 @@ export const projects: Project[] = [
     name: 'NDA - Confidential Deal',
     lastUpdated: 'Yesterday',
     files: [
-      { id: '3a', name: 'mutual-nda.md', type: 'md' },
-      { id: '3b', name: 'exhibit-a.md', type: 'md' },
-      { id: '3c', name: 'revision-notes.txt', type: 'txt' },
+      { id: '3a', name: 'mutual-nda.md', type: 'md', status: 'Final' },
+      { id: '3b', name: 'exhibit-a.md', type: 'md', status: 'Final' },
+      { id: '3c', name: 'revision-notes.txt', type: 'txt', status: 'Reviewed' },
     ],
   },
   {
@@ -57,11 +60,11 @@ export const projects: Project[] = [
     name: 'Real Estate Purchase - 123 Main St',
     lastUpdated: '2 days ago',
     files: [
-      { id: '4a', name: 'purchase-agreement.md', type: 'md' },
-      { id: '4b', name: 'title-search.md', type: 'md' },
-      { id: '4c', name: 'inspection-report.md', type: 'md' },
-      { id: '4d', name: 'closing-statement.tex', type: 'tex' },
-      { id: '4e', name: 'amendments.md', type: 'md' },
+      { id: '4a', name: 'purchase-agreement.md', type: 'md', status: 'Draft' },
+      { id: '4b', name: 'title-search.md', type: 'md', status: 'Reviewed' },
+      { id: '4c', name: 'inspection-report.md', type: 'md', status: 'Final' },
+      { id: '4d', name: 'closing-statement.tex', type: 'tex', status: 'Draft' },
+      { id: '4e', name: 'amendments.md', type: 'md', status: 'Draft' },
     ],
   },
   {
@@ -69,9 +72,9 @@ export const projects: Project[] = [
     name: 'Licensing Agreement - SoftwareCo',
     lastUpdated: '3 days ago',
     files: [
-      { id: '5a', name: 'license-agreement.md', type: 'md' },
-      { id: '5b', name: 'fee-schedule.tex', type: 'tex' },
-      { id: '5c', name: 'support-terms.md', type: 'md' },
+      { id: '5a', name: 'license-agreement.md', type: 'md', status: 'Reviewed' },
+      { id: '5b', name: 'fee-schedule.tex', type: 'tex', status: 'Final' },
+      { id: '5c', name: 'support-terms.md', type: 'md', status: 'Draft' },
     ],
   },
   {
@@ -79,10 +82,10 @@ export const projects: Project[] = [
     name: 'Partnership Agreement - Law Firm LLP',
     lastUpdated: '1 week ago',
     files: [
-      { id: '6a', name: 'partnership-agreement.md', type: 'md' },
-      { id: '6b', name: 'capital-contributions.tex', type: 'tex' },
-      { id: '6c', name: 'voting-rights.md', type: 'md' },
-      { id: '6d', name: 'exit-provisions.md', type: 'md' },
+      { id: '6a', name: 'partnership-agreement.md', type: 'md', status: 'Final' },
+      { id: '6b', name: 'capital-contributions.tex', type: 'tex', status: 'Reviewed' },
+      { id: '6c', name: 'voting-rights.md', type: 'md', status: 'Draft' },
+      { id: '6d', name: 'exit-provisions.md', type: 'md', status: 'Final' },
     ],
   },
 ];
