@@ -44,7 +44,7 @@ export function LeftSidebar({
   };
 
   return (
-    <aside className="w-72 border-r border-border bg-card flex flex-col h-full">
+    <aside className="w-full border-r border-border bg-card flex flex-col h-full">
       {/* New Project Button */}
       <div className="p-3 border-b border-border">
         <Button className="w-full gap-2" size="sm">
