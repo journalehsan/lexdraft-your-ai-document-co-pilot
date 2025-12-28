@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthStore';
 import { projects as initialProjectsData } from '@/data/mockData';
 
 export interface File {
@@ -34,8 +35,11 @@ interface ProjectsContextType {
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
 
 export function ProjectsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.id || 'guest';
+
   const [projects, setProjects] = useState<Project[]>(() => {
-    const saved = localStorage.getItem('lexdraft_projects');
+    const saved = localStorage.getItem(`lexdraft_projects_${userId}`);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -62,8 +66,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(projects[0]?.files[0]?.id || null);
 
   useEffect(() => {
-    localStorage.setItem('lexdraft_projects', JSON.stringify(projects));
-  }, [projects]);
+    localStorage.setItem(`lexdraft_projects_${userId}`, JSON.stringify(projects));
+  }, [projects, userId]);
 
   const addProject = (name: string) => {
     const newProject: Project = {

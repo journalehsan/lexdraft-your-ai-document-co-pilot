@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthStore';
 
 export type Theme = 'light' | 'dark';
 export type WorkspaceMode = 'global' | 'legal';
@@ -35,8 +36,11 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.id || 'guest';
+
   const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem('lexdraft_settings');
+    const saved = localStorage.getItem(`lexdraft_settings_${userId}`);
     if (saved) {
       try {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
@@ -48,13 +52,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('lexdraft_settings', JSON.stringify(settings));
+    localStorage.setItem(`lexdraft_settings_${userId}`, JSON.stringify(settings));
     
     // Apply theme
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(settings.theme);
-  }, [settings]);
+  }, [settings, userId]);
 
   const updateSettings = (updates: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));

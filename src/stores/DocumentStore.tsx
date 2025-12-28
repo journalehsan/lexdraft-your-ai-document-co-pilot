@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthStore';
 import { Block, Document, DocumentState, PendingPatch } from '@/types/document';
 import { applyPatch, blocksToMarkdown, createDocument, markdownToBlocks } from '@/lib/patch';
 import { addVersionSnapshot, normalizeMarkdown, parseMarkdownSections, restoreVersion as restoreVersionEntry, MAX_VERSION_HISTORY } from '@/lib/documentUtils';
 import { sampleDocumentContent } from '@/data/mockData';
 
-const STORAGE_KEY = 'lexdraft_documents';
 const SCHEMA_VERSION = 2;
+
+const getStorageKey = (userId: string) => `lexdraft_documents_${userId}`;
 
 interface DocumentsContextType {
   documents: Record<string, Document>;
@@ -54,6 +56,10 @@ const hydrateDocument = (doc: Document | null, fileId: string): Document => {
 };
 
 export function DocumentsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const userId = user?.id || 'guest';
+  const storageKey = getStorageKey(userId);
+
   const [documents, setDocuments] = useState<Record<string, Document>>({});
   const [selectedFileId, setSelectedFileIdState] = useState<string | null>(null);
   const [documentState, setDocumentState] = useState<DocumentState>({
@@ -78,7 +84,7 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
   }, [selectedFileId, documentState.document]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
         const data: StorageData = JSON.parse(saved);
@@ -97,14 +103,14 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse documents', e);
       }
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    localStorage.setItem(storageKey, JSON.stringify({
       version: SCHEMA_VERSION,
       documents
     }));
-  }, [documents]);
+  }, [documents, storageKey]);
 
   useEffect(() => {
     if (!selectedFileId) {
