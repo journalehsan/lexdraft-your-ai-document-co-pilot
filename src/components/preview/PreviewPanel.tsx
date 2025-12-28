@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { sampleDocumentContent } from '@/data/mockData';
 import { TypewriterText } from './TypewriterText';
 import { FileText, GitCompare, BookOpen } from 'lucide-react';
+import { VditorEditor } from '@/components/editor/VditorEditor';
 
 interface PreviewPanelProps {
   isGenerating?: boolean;
+  selectedFileId?: string | null;
+  documentContent?: string;
+  onContentChange?: (content: string) => void;
 }
 
-export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
+export function PreviewPanel({ isGenerating = false, selectedFileId, documentContent = '', onContentChange }: PreviewPanelProps) {
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [typewriterComplete, setTypewriterComplete] = useState(true);
+  const [editorValue, setEditorValue] = useState(documentContent);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isGenerating) {
@@ -20,6 +25,32 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
       setTypewriterComplete(false);
     }
   }, [isGenerating]);
+
+  useEffect(() => {
+    setEditorValue(documentContent);
+  }, [documentContent, selectedFileId]);
+
+  const handleEditorChange = useCallback((value: string) => {
+    setEditorValue(value);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (onContentChange) {
+        onContentChange(value);
+      }
+    }, 500);
+  }, [onContentChange]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const renderMarkdown = (content: string) => {
     return content.split('\n').map((line, index) => {
@@ -119,10 +150,10 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
         </div>
 
         <TabsContent value="preview" className="flex-1 m-0 overflow-hidden">
-          <ScrollArea className="h-full w-full">
-            <div className="max-w-3xl mx-auto p-6">
-              {isGenerating && !typewriterComplete ? (
-                <div className="font-serif">
+          <div className="h-full w-full overflow-hidden">
+            {isGenerating && !typewriterComplete ? (
+              <ScrollArea className="h-full w-full">
+                <div className="max-w-3xl mx-auto p-6 font-serif">
                   {renderSkeleton()}
                   <div className="p-6 border-t border-dashed border-border mt-4">
                     <p className="text-sm text-muted-foreground italic">
@@ -134,13 +165,18 @@ export function PreviewPanel({ isGenerating = false }: PreviewPanelProps) {
                     </p>
                   </div>
                 </div>
-              ) : (
-                <article className="prose prose-sm max-w-none font-serif">
-                  {renderMarkdown(sampleDocumentContent)}
-                </article>
-              )}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            ) : (
+              <div className="h-full w-full flex flex-col">
+                <VditorEditor
+                  value={editorValue}
+                  onChange={handleEditorChange}
+                  height="100%"
+                  theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                />
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="diff" className="flex-1 m-0 overflow-hidden">
