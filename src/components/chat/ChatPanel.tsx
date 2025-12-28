@@ -175,6 +175,7 @@ export function ChatPanel() {
   };
 
   const isGenerating = composerState === 'sending' || composerState === 'queued';
+  const hasMultipleLines = inputValue.includes('\n');
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -239,7 +240,7 @@ export function ChatPanel() {
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
                 placeholder="Describe what you want to draft..."
-                className="w-full resize-none bg-transparent border-0 px-0 py-0 pb-6 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground max-h-[200px] overflow-y-auto"
+                className={`w-full resize-none bg-transparent border-0 px-0 py-0 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground max-h-[200px] overflow-y-auto ${hasMultipleLines ? 'pb-6' : ''}`}
                 rows={1}
                 style={{ height: 'auto' }}
               />
