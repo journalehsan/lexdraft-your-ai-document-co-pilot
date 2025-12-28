@@ -28,34 +28,42 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        <LeftSidebar
-          selectedProject={selectedProject}
-          selectedFile={selectedFile}
-          onSelectProject={handleSelectProject}
-          onSelectFile={handleSelectFile}
-        />
+        <ResizablePanelGroup direction="horizontal" className="flex-1">
+          {/* Left Sidebar */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+            <LeftSidebar
+              selectedProject={selectedProject}
+              selectedFile={selectedFile}
+              onSelectProject={handleSelectProject}
+              onSelectFile={handleSelectFile}
+            />
+          </ResizablePanel>
 
-        {/* Main Split View */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
-            {/* Chat Panel */}
-            <ResizablePanel defaultSize={45} minSize={30}>
-              <ChatPanel />
-            </ResizablePanel>
+          <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
 
-            {/* Resizable Handle */}
-            <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
+          {/* Main Split View */}
+          <ResizablePanel defaultSize={80} minSize={50}>
+            <div className="flex-1 flex flex-col overflow-hidden h-full">
+              <ResizablePanelGroup direction="horizontal" className="flex-1">
+                {/* Chat Panel */}
+                <ResizablePanel defaultSize={45} minSize={30}>
+                  <ChatPanel />
+                </ResizablePanel>
 
-            {/* Preview Panel */}
-            <ResizablePanel defaultSize={55} minSize={30}>
-              <PreviewPanel isGenerating={isGenerating} />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+                {/* Resizable Handle */}
+                <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
 
-          {/* Bottom Bar */}
-          <BottomBar />
-        </div>
+                {/* Preview Panel */}
+                <ResizablePanel defaultSize={55} minSize={30}>
+                  <PreviewPanel isGenerating={isGenerating} />
+                </ResizablePanel>
+              </ResizablePanelGroup>
+
+              {/* Bottom Bar */}
+              <BottomBar />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
