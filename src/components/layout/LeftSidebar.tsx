@@ -2,8 +2,9 @@ import { Plus, Search, FileText, FolderOpen, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { projects, Project, ProjectFile } from '@/data/mockData';
+import { projects, Project, ProjectFile, FileStatus } from '@/data/mockData';
 import { useState } from 'react';
 
 interface LeftSidebarProps {
@@ -27,6 +28,19 @@ export function LeftSidebar({
 
   const getFileIcon = (type: ProjectFile['type']) => {
     return <FileText className="h-3.5 w-3.5" />;
+  };
+
+  const getStatusBadge = (status: FileStatus) => {
+    const variants: Record<FileStatus, { className: string }> = {
+      Draft: { className: 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-500/20' },
+      Reviewed: { className: 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/20' },
+      Final: { className: 'bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20' },
+    };
+    return (
+      <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4 font-medium', variants[status].className)}>
+        {status}
+      </Badge>
+    );
   };
 
   return (
@@ -94,7 +108,8 @@ export function LeftSidebar({
                       )}
                     >
                       {getFileIcon(file.type)}
-                      <span className="truncate font-mono text-xs">{file.name}</span>
+                      <span className="truncate font-mono text-xs flex-1">{file.name}</span>
+                      {getStatusBadge(file.status)}
                     </button>
                   ))}
                 </div>
