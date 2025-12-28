@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Vditor from 'vditor';
 import 'vditor/dist/index.css';
 
@@ -21,10 +21,13 @@ export function VditorEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const vditorRef = useRef<Vditor | null>(null);
   const latestValueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+  const isUserTypingRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
 
-  const handleInputChange = useCallback((newValue: string) => {
-    onChange(newValue);
+  // Keep onChange ref up to date without triggering re-initialization
+  useEffect(() => {
+    onChangeRef.current = onChange;
   }, [onChange]);
 
   useEffect(() => {
@@ -41,7 +44,14 @@ export function VditorEditor({
       placeholder: 'Start writing...',
       cdn: cdnBase,
       cache: { enable: false },
-      input: handleInputChange,
+      input: (newValue: string) => {
+        isUserTypingRef.current = true;
+        onChangeRef.current(newValue);
+        // Reset the flag after a short delay to allow external updates
+        setTimeout(() => {
+          isUserTypingRef.current = false;
+        }, 300);
+      },
       focus: () => {
         setIsReady(true);
       },
@@ -110,10 +120,11 @@ export function VditorEditor({
         }
       }
     };
-  }, [height, theme, handleInputChange, disabled]);
+  }, [height, theme, disabled, cdnBase]);
 
   useEffect(() => {
-    if (isReady && vditorRef.current) {
+    // Don't update value while user is actively typing to prevent cursor jumps and undo/redo issues
+    if (isReady && vditorRef.current && !isUserTypingRef.current) {
       const currentValue = vditorRef.current.getValue();
       if (value !== currentValue) {
         // Vditor may throw if its internal md parser is not ready; guard to avoid crashes
