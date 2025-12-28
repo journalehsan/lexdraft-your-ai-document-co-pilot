@@ -1,24 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { TopBar } from '@/components/layout/TopBar';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { BottomBar } from '@/components/layout/BottomBar';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { PreviewPanel } from '@/components/preview/PreviewPanel';
-import { projects, Project, ProjectFile } from '@/data/mockData';
+import { useProjects } from '@/stores/ProjectsStore';
+import { useDocuments } from '@/stores/DocumentStore';
 
 const Index = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(projects[0]);
-  const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(projects[0].files[0]);
+  const { selectedProjectId, selectedFileId } = useProjects();
+  const { selectedFileId: docSelectedFileId, setSelectedFileId: setDocSelectedFileId, getMarkdown, setMarkdown } = useDocuments();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [documentContent, setDocumentContent] = useState('');
 
-  const handleSelectProject = (project: Project) => {
-    setSelectedProject(project);
-    setSelectedFile(project.files[0]);
-  };
+  useEffect(() => {
+    if (selectedFileId !== docSelectedFileId) {
+      setDocSelectedFileId(selectedFileId);
+    }
+  }, [selectedFileId, docSelectedFileId, setDocSelectedFileId]);
 
-  const handleSelectFile = (file: ProjectFile) => {
-    setSelectedFile(file);
+  useEffect(() => {
+    if (selectedFileId) {
+      const content = getMarkdown();
+      setDocumentContent(content);
+    }
+  }, [selectedFileId, docSelectedFileId, getMarkdown]);
+
+  const handleContentChange = (content: string) => {
+    setDocumentContent(content);
+    setMarkdown(content);
   };
 
   return (
@@ -31,12 +42,7 @@ const Index = () => {
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Sidebar */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-            <LeftSidebar
-              selectedProject={selectedProject}
-              selectedFile={selectedFile}
-              onSelectProject={handleSelectProject}
-              onSelectFile={handleSelectFile}
-            />
+            <LeftSidebar />
           </ResizablePanel>
 
           <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
@@ -55,7 +61,12 @@ const Index = () => {
 
                 {/* Preview Panel */}
                 <ResizablePanel defaultSize={55} minSize={30}>
-                  <PreviewPanel isGenerating={isGenerating} />
+                  <PreviewPanel
+                    isGenerating={isGenerating}
+                    selectedFileId={selectedFileId}
+                    documentContent={documentContent}
+                    onContentChange={handleContentChange}
+                  />
                 </ResizablePanel>
               </ResizablePanelGroup>
 
