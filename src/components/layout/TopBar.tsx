@@ -10,13 +10,14 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../ThemeProvider';
+import { useSettings } from '@/stores/SettingsStore';
 
 export function TopBar() {
   const [workspaceModel, setWorkspaceModel] = useState('Global AI');
   const [provider, setProvider] = useState('OpenRouter');
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
+  const { settings, updateSettings } = useSettings();
+  const theme = settings.theme;
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 z-50">
@@ -75,7 +76,7 @@ export function TopBar() {
           variant="ghost" 
           size="icon" 
           className="h-8 w-8" 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' })}
           data-testid="button-theme-toggle"
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
