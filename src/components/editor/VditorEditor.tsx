@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Vditor from 'vditor';
 import 'vditor/dist/index.css';
+import './vditor-custom.css';
 
 interface VditorEditorProps {
   value: string;
@@ -24,11 +25,33 @@ export function VditorEditor({
   const onChangeRef = useRef(onChange);
   const isUserTypingRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>(
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  );
 
   // Keep onChange ref up to date without triggering re-initialization
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  // Observe theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark');
+          setCurrentTheme(isDark ? 'dark' : 'light');
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     latestValueRef.current = value;
@@ -39,7 +62,7 @@ export function VditorEditor({
 
     const vditor = new Vditor(containerRef.current, {
       height,
-      theme,
+      theme: currentTheme,
       mode: 'wysiwyg',
       placeholder: 'Start writing...',
       cdn: cdnBase,
@@ -91,7 +114,7 @@ export function VditorEditor({
       ],
       preview: {
         theme: {
-          current: theme,
+          current: currentTheme,
         },
       },
       counter: {
@@ -120,7 +143,18 @@ export function VditorEditor({
         }
       }
     };
-  }, [height, theme, disabled, cdnBase]);
+  }, [height, disabled, cdnBase, currentTheme]);
+
+  // Update theme dynamically when it changes
+  useEffect(() => {
+    if (vditorRef.current && isReady) {
+      try {
+        vditorRef.current.setTheme(currentTheme, currentTheme);
+      } catch (error) {
+        console.warn('Vditor theme update skipped:', error);
+      }
+    }
+  }, [currentTheme, isReady]);
 
   useEffect(() => {
     // Don't update value while user is actively typing to prevent cursor jumps and undo/redo issues

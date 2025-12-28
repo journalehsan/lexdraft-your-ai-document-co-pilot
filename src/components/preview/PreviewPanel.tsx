@@ -172,7 +172,6 @@ export function PreviewPanel({ isGenerating = false, selectedFileId, documentCon
                   value={editorValue}
                   onChange={handleEditorChange}
                   height="100%"
-                  theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                 />
               </div>
             )}
