@@ -1,4 +1,4 @@
-import { Settings, ChevronDown, User, LogOut } from 'lucide-react';
+import { Settings as SettingsIcon, ChevronDown, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -69,8 +69,8 @@ export function TopBar() {
 
       {/* Right: User + Settings */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Settings className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/settings')}>
+          <SettingsIcon className="h-4 w-4" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
