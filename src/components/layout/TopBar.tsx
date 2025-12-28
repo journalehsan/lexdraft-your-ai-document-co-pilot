@@ -1,28 +1,31 @@
-import { Settings, ChevronDown, User } from 'lucide-react';
+import { Settings, ChevronDown, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
 export function TopBar() {
   const [workspaceModel, setWorkspaceModel] = useState('Global AI');
   const [provider, setProvider] = useState('OpenRouter');
+  const navigate = useNavigate();
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
+    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 z-50">
       {/* Left: Logo */}
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">LD</span>
           </div>
           <span className="font-serif text-xl font-semibold text-foreground">LexDraft</span>
-        </div>
+        </Link>
 
         {/* Dropdowns */}
         <div className="flex items-center gap-2">
@@ -69,11 +72,32 @@ export function TopBar() {
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Settings className="h-4 w-4" />
         </Button>
-        <Avatar className="h-8 w-8 bg-secondary">
-          <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+              <Avatar className="h-8 w-8 bg-secondary">
+                <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <User className="mr-2 h-4 w-4" />
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              Workspace Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
