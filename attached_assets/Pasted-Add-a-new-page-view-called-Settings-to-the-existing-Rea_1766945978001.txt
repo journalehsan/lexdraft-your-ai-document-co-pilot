@@ -1,0 +1,131 @@
+Add a new page/view called Settings to the existing React UI app LexDraft. Do NOT redesign the app. Reuse the same TopBar and LeftSidebar. Keep styling consistent.
+
+Navigation
+
+Add Settings item in the top-right user menu next to Profile.
+
+Route to /settings (or toggle SettingsView if no router exists).
+
+Settings should have a left-side sub-navigation inside the main area (tabs or vertical menu):
+
+General
+
+AI & Providers
+
+Documents
+
+Agent Behavior
+
+Privacy & Security
+
+Notifications
+
+Settings sections (must reflect current app features)
+1) General
+
+Default workspace mode dropdown: Global AI / Legal AI
+
+Default provider dropdown: OpenRouter / Ollama (On-Prem)
+
+Theme: Light / System (UI only)
+
+Language + timezone
+
+2) AI & Providers
+
+OpenRouter:
+
+API key input (masked) + “Test connection” button (mock)
+
+Default model dropdown (dummy list)
+
+Ollama:
+
+Server URL input (e.g., http://localhost:11434
+)
+
+Model dropdown (dummy list: llama3, qwen2.5, mistral…)
+
+“Check availability” button (mock)
+
+Streaming toggle (on/off)
+
+Response verbosity slider (Concise ↔ Detailed)
+
+Caching toggle + “Cache level” (Low/Medium/High)
+
+3) Documents
+
+Default format: Markdown / LaTeX
+
+Export options toggles: Export Markdown, Export LaTeX, Export PDF (PDF can be disabled with tooltip “Phase 2”)
+
+Autosave toggle + autosave interval dropdown (15s/30s/60s)
+
+Citation style dropdown (APA/Bluebook/None) (UI only)
+
+4) Agent Behavior
+
+“Ask clarifying questions first” toggle (default on)
+
+Max clarifying questions (1–10)
+
+“Show agent steps” toggle (default on)
+
+Research mode toggle (off/on) with a note “Uses web sources when enabled”
+
+Risk mode dropdown:
+
+Conservative drafting
+
+Balanced
+
+Aggressive (with warning tooltip)
+
+5) Privacy & Security
+
+“Store project history” toggle
+
+Data retention dropdown (7/30/90/365 days)
+
+“Allow saving prompts” toggle
+
+“Redact sensitive fields” toggle (SSN, passport, etc.) (UI only)
+
+6) Notifications
+
+Email notifications toggle
+
+In-app notifications toggle
+
+“Draft complete” notification toggle
+
+“Export ready” notification toggle
+
+UX requirements
+
+Each section shows a header + description text.
+
+Use cards with toggles, dropdowns, inputs.
+
+Sticky bottom action bar: Save / Reset to defaults
+
+Save shows toast “Settings saved”
+
+Persist settings to localStorage (or in-memory store if simpler)
+
+Responsive design
+
+Return updated code and list changed/new files.
+
+Tiny extra (optional) menu text you can add
+
+If Replit asks what to name the avatar menu:
+
+“Account”
+
+Profile
+
+Settings
+
+Sign out
