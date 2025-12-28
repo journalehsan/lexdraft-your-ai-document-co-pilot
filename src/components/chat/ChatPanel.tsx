@@ -1,18 +1,27 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Mic, X, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatBubble } from './ChatBubble';
 import { AgentStepsPills } from './AgentStepsPills';
 import { sampleChatMessages, AgentStep } from '@/data/mockData';
+import { toast } from 'sonner';
+
+type ComposerState = 'idle' | 'sending' | 'queued';
 
 export function ChatPanel() {
   const [messages, setMessages] = useState(sampleChatMessages);
   const [inputValue, setInputValue] = useState('');
   const [currentStep, setCurrentStep] = useState<AgentStep>('Draft');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [composerState, setComposerState] = useState<ComposerState>('idle');
+  const [queuedMessages, setQueuedMessages] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const maxTextareaHeight = 200;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -20,50 +29,152 @@ export function ChatPanel() {
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(textarea.scrollHeight, maxTextareaHeight);
+    textarea.style.height = `${newHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustTextareaHeight(textareaRef.current);
+    }
+  }, [inputValue, adjustTextareaHeight]);
+
+  const processMessage = useCallback(async (content: string) => {
+    setComposerState('sending');
 
     const newMessage = {
       id: `m${Date.now()}`,
       role: 'user' as const,
-      content: inputValue,
+      content,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages([...messages, newMessage]);
-    setInputValue('');
-    setIsGenerating(true);
+    setMessages((prev) => [...prev, newMessage]);
 
-    // Simulate agent steps progression
-    const steps: AgentStep[] = ['Ask questions', 'Research', 'Draft', 'Refine'];
-    let stepIndex = 0;
+    return new Promise<void>((resolve) => {
+      const steps: AgentStep[] = ['Ask questions', 'Research', 'Draft', 'Refine'];
+      let stepIndex = 0;
 
-    const interval = setInterval(() => {
-      if (stepIndex < steps.length) {
-        setCurrentStep(steps[stepIndex]);
-        stepIndex++;
-      } else {
-        clearInterval(interval);
-        setIsGenerating(false);
+      const interval = setInterval(() => {
+        if (stepIndex < steps.length) {
+          setCurrentStep(steps[stepIndex]);
+          stepIndex++;
+        } else {
+          clearInterval(interval);
 
-        // Add a simulated response
-        const response = {
-          id: `m${Date.now() + 1}`,
-          role: 'assistant' as const,
-          content: 'I\'ve updated the document based on your input. You can see the changes in the Preview panel. Would you like me to refine any specific section?',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, response]);
+          const response = {
+            id: `m${Date.now() + 1}`,
+            role: 'assistant' as const,
+            content: 'I\'ve updated the document based on your input. You can see the changes in the Preview panel. Would you like me to refine any specific section?',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setMessages((prev) => [...prev, response]);
+          setComposerState('idle');
+          resolve();
+        }
+      }, 1200);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (composerState === 'idle' && queuedMessages.length > 0) {
+      const nextMessage = queuedMessages[0];
+      setQueuedMessages((prev) => prev.slice(1));
+      processMessage(nextMessage);
+    }
+  }, [composerState, queuedMessages, processMessage]);
+
+  const handleSend = () => {
+    if (!inputValue.trim()) return;
+
+    if (composerState === 'idle') {
+      processMessage(inputValue.trim());
+      setInputValue('');
+      if (textareaRef.current) {
+        adjustTextareaHeight(textareaRef.current);
       }
-    }, 1200);
+    } else {
+      setQueuedMessages((prev) => [...prev, inputValue.trim()]);
+      setInputValue('');
+      if (textareaRef.current) {
+        adjustTextareaHeight(textareaRef.current);
+      }
+      setComposerState('queued');
+    }
+  };
+
+  const handleCancelQueue = () => {
+    setQueuedMessages([]);
+    setComposerState('idle');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       handleSend();
     }
   };
+
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error('Voice input not supported in this browser');
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.lang = 'en-US';
+
+    recognitionRef.current.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognitionRef.current.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue((prev) => prev + (prev ? ' ' : '') + transcript);
+      setIsListening(false);
+    };
+
+    recognitionRef.current.onerror = () => {
+      setIsListening(false);
+      toast.error('Voice recognition error');
+    };
+
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  };
+
+  const handleToggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const isGenerating = composerState === 'sending' || composerState === 'queued';
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -107,27 +218,85 @@ export function ChatPanel() {
 
       {/* Input */}
       <div className="p-4 border-t border-border bg-card">
-        <div className="flex gap-2 items-end">
-          <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10">
-            <Paperclip className="h-4 w-4" />
-          </Button>
-          <Textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Describe what you want to draft..."
-            className="min-h-[44px] max-h-32 resize-none bg-background"
-            rows={1}
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isGenerating}
-            className="shrink-0 gap-2"
-          >
-            <Send className="h-4 w-4" />
-            Generate
-          </Button>
+        <div className="relative">
+          <div className="flex items-end gap-2 rounded-lg border border-border bg-background p-2 shadow-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={() => {}}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+
+            <div className="flex-1 relative min-w-0">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                placeholder="Describe what you want to draft..."
+                className="w-full resize-none bg-transparent border-0 p-0 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground max-h-[200px] overflow-y-auto"
+                rows={1}
+                style={{ height: 'auto' }}
+              />
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              {isListening && (
+                <span className="text-xs text-muted-foreground animate-pulse mr-1">
+                  Listening...
+                </span>
+              )}
+
+              {queuedMessages.length > 0 && (
+                <div className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  <span className="text-muted-foreground">Queued ({queuedMessages.length})</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={handleCancelQueue}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`shrink-0 h-8 w-8 ${isListening ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={handleToggleListening}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="default"
+                size="icon"
+                className="shrink-0 h-8 w-8"
+                onClick={handleSend}
+                disabled={!inputValue.trim()}
+              >
+                {composerState === 'sending' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Press Enter to send, Shift+Enter for newline
+        </p>
       </div>
     </div>
   );
