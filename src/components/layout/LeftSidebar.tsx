@@ -1,8 +1,9 @@
-import { Plus, Search, FileText, FolderOpen, ChevronRight, MoreVertical, Edit2, Archive, Trash2, Unarchive } from 'lucide-react';
+import { Plus, Search, FileText, FolderOpen, ChevronRight, MoreVertical, Edit2, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useProjects, Project, File as ProjectFile } from '@/stores/ProjectsStore';
@@ -119,7 +120,7 @@ export function LeftSidebar() {
             <DropdownMenuItem onClick={() => { setActiveProjectId(project.id); setProjectName(project.name); setIsRenameProjectModalOpen(true); }}><Edit2 className="h-3 w-3 mr-2" /> Rename</DropdownMenuItem>
             <DropdownMenuItem onClick={() => { setActiveProjectId(project.id); setIsNewFileModalOpen(true); }}><Plus className="h-3 w-3 mr-2" /> New File</DropdownMenuItem>
             <DropdownMenuItem onClick={() => project.isArchived ? unarchiveProject(project.id) : archiveProject(project.id)}>
-              {project.isArchived ? <Unarchive className="h-3 w-3 mr-2" /> : <Archive className="h-3 w-3 mr-2" />}
+              {project.isArchived ? <ArchiveRestore className="h-3 w-3 mr-2" /> : <Archive className="h-3 w-3 mr-2" />}
               {project.isArchived ? 'Restore' : 'Archive'}
             </DropdownMenuItem>
           </DropdownMenuContent>
