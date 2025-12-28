@@ -7,6 +7,33 @@ export interface Block {
   hash: string;
 }
 
+export interface MarkdownSection {
+  id: string;
+  type: 'heading' | 'paragraph';
+  level?: 1 | 2 | 3;
+  title?: string;
+  content: string;
+  startLine: number;
+  endLine: number;
+}
+
+export interface DocumentVersion {
+  id: string;
+  markdown: string;
+  sections: MarkdownSection[];
+  version: number;
+  timestamp: string;
+}
+
+export interface MarkdownDiff {
+  added: MarkdownSection[];
+  removed: MarkdownSection[];
+  modified: {
+    from: MarkdownSection;
+    to: MarkdownSection;
+  }[];
+}
+
 export type PatchOpType = 'replace_block' | 'insert_after' | 'delete_block';
 
 export interface PatchOp {
@@ -20,6 +47,9 @@ export interface Document {
   id: string;
   fileId: string;
   blocks: Block[];
+  markdown: string;
+  sections: MarkdownSection[];
+  versions: DocumentVersion[];
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +59,8 @@ export interface DocumentSnapshot {
   id: string;
   documentId: string;
   blocks: Block[];
+  markdown: string;
+  sections: MarkdownSection[];
   version: number;
   timestamp: string;
 }
@@ -40,6 +72,6 @@ export interface PendingPatch {
 
 export interface DocumentState {
   document: Document | null;
-  snapshots: DocumentSnapshot[];
+  versions: DocumentVersion[];
   pendingPatch: PendingPatch | null;
 }

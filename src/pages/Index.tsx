@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { TopBar } from '@/components/layout/TopBar';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
@@ -10,9 +10,14 @@ import { useDocuments } from '@/stores/DocumentStore';
 
 const Index = () => {
   const { selectedProjectId, selectedFileId } = useProjects();
-  const { selectedFileId: docSelectedFileId, setSelectedFileId: setDocSelectedFileId, getMarkdown, setMarkdown } = useDocuments();
+  const {
+    selectedFileId: docSelectedFileId,
+    setSelectedFileId: setDocSelectedFileId,
+    documentState,
+    setMarkdown,
+    getMarkdown
+  } = useDocuments();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [documentContent, setDocumentContent] = useState('');
 
   useEffect(() => {
     if (selectedFileId !== docSelectedFileId) {
@@ -20,17 +25,16 @@ const Index = () => {
     }
   }, [selectedFileId, docSelectedFileId, setDocSelectedFileId]);
 
-  useEffect(() => {
-    if (selectedFileId) {
-      const content = getMarkdown();
-      setDocumentContent(content);
+  const documentContent = useMemo(() => {
+    if (documentState.document) {
+      return documentState.document.markdown;
     }
-  }, [selectedFileId, docSelectedFileId, getMarkdown]);
+    return getMarkdown();
+  }, [documentState.document, getMarkdown]);
 
-  const handleContentChange = (content: string) => {
-    setDocumentContent(content);
+  const handleContentChange = useCallback((content: string) => {
     setMarkdown(content);
-  };
+  }, [setMarkdown]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">

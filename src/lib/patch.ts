@@ -1,21 +1,12 @@
 import { Block, Document, PatchOp, DocumentSnapshot } from '@/types/document';
-
-export function generateHash(content: string): string {
-  let hash = 0;
-  for (let i = 0; i < content.length; i++) {
-    const char = content.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36);
-}
+import { normalizeMarkdown, parseMarkdownSections, stableHash } from './documentUtils';
 
 export function createBlock(type: Block['type'], content: string): Block {
   return {
     id: crypto.randomUUID(),
     type,
     content,
-    hash: generateHash(content)
+    hash: stableHash(content)
   };
 }
 
@@ -100,9 +91,14 @@ export function applyPatch(document: Document, ops: PatchOp[]): Document {
     }
   }
 
+  const markdown = blocksToMarkdown(newBlocks);
+  const sections = parseMarkdownSections(markdown);
+
   return {
     ...document,
     blocks: newBlocks,
+    markdown,
+    sections,
     version: document.version + 1,
     updatedAt: new Date().toISOString()
   };
@@ -113,18 +109,28 @@ export function createSnapshot(document: Document): DocumentSnapshot {
     id: crypto.randomUUID(),
     documentId: document.id,
     blocks: document.blocks.map(b => ({ ...b })),
+    markdown: document.markdown,
+    sections: document.sections.map(section => ({ ...section })),
     version: document.version,
     timestamp: new Date().toISOString()
   };
 }
 
 export function createDocument(fileId: string, initialContent?: string): Document {
-  const blocks = initialContent ? markdownToBlocks(initialContent) : [createBlock('paragraph', '')];
+  const normalizedContent = normalizeMarkdown(initialContent || '');
+  const initialBlocks = normalizedContent
+    ? markdownToBlocks(normalizedContent)
+    : [createBlock('paragraph', '')];
+  const markdown = normalizedContent || blocksToMarkdown(initialBlocks);
+  const sections = parseMarkdownSections(markdown);
 
   return {
     id: crypto.randomUUID(),
     fileId,
-    blocks,
+    blocks: initialBlocks,
+    markdown,
+    sections,
+    versions: [],
     version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()

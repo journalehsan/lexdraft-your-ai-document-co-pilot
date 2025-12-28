@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Vditor from 'vditor';
 import 'vditor/dist/index.css';
 import './vditor-custom.css';
+import { normalizeMarkdown } from '@/lib/documentUtils';
 
 interface VditorEditorProps {
   value: string;
@@ -69,7 +70,8 @@ export function VditorEditor({
       cache: { enable: false },
       input: (newValue: string) => {
         isUserTypingRef.current = true;
-        onChangeRef.current(newValue);
+        const safeValue = normalizeMarkdown(newValue);
+        onChangeRef.current(safeValue);
         // Reset the flag after a short delay to allow external updates
         setTimeout(() => {
           isUserTypingRef.current = false;
@@ -115,6 +117,9 @@ export function VditorEditor({
       preview: {
         theme: {
           current: currentTheme,
+        },
+        markdown: {
+          sanitize: true,
         },
       },
       counter: {
@@ -176,12 +181,4 @@ export function VditorEditor({
       <div ref={containerRef} className="h-full w-full" />
     </div>
   );
-}
-
-export function getMarkdown(content: string): string {
-  return content;
-}
-
-export function setMarkdown(content: string): string {
-  return content;
 }

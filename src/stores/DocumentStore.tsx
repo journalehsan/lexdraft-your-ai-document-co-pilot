@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Document, DocumentState, PendingPatch, PatchOp, Block } from '@/types/document';
-import { createDocument, applyPatch, createSnapshot, blocksToMarkdown, markdownToBlocks } from '@/lib/patch';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Block, Document, DocumentState, PendingPatch } from '@/types/document';
+import { applyPatch, blocksToMarkdown, createDocument, markdownToBlocks } from '@/lib/patch';
+import { addVersionSnapshot, normalizeMarkdown, parseMarkdownSections, restoreVersion as restoreVersionEntry, MAX_VERSION_HISTORY } from '@/lib/documentUtils';
 import { sampleDocumentContent } from '@/data/mockData';
 
 const STORAGE_KEY = 'lexdraft_documents';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 interface DocumentsContextType {
   documents: Record<string, Document>;
@@ -19,6 +20,7 @@ interface DocumentsContextType {
   resetToSnapshot: (snapshotId: string) => void;
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
+  restoreVersion: (versionId: string) => void;
 }
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(undefined);
@@ -28,23 +30,69 @@ interface StorageData {
   documents: Record<string, Document>;
 }
 
+const hydrateDocument = (doc: Document | null, fileId: string): Document => {
+  const baseDoc = doc ?? createDocument(fileId, sampleDocumentContent);
+  const markdownSource = baseDoc.markdown || (baseDoc.blocks?.length ? blocksToMarkdown(baseDoc.blocks) : sampleDocumentContent);
+  const normalizedMarkdown = normalizeMarkdown(markdownSource);
+  const sections = parseMarkdownSections(normalizedMarkdown);
+  const blocks = baseDoc.blocks?.length ? baseDoc.blocks : markdownToBlocks(normalizedMarkdown);
+
+  const hydrated: Document = {
+    ...baseDoc,
+    fileId: baseDoc.fileId || fileId,
+    blocks,
+    markdown: normalizedMarkdown,
+    sections,
+    versions: baseDoc.versions ? baseDoc.versions.slice(-MAX_VERSION_HISTORY) : [],
+    version: baseDoc.version || 1,
+    createdAt: baseDoc.createdAt || new Date().toISOString(),
+    updatedAt: baseDoc.updatedAt || new Date().toISOString()
+  };
+
+  const versions = addVersionSnapshot(hydrated.versions, hydrated.markdown, hydrated.sections, MAX_VERSION_HISTORY, hydrated.version);
+  return { ...hydrated, versions };
+};
+
 export function DocumentsProvider({ children }: { children: React.ReactNode }) {
   const [documents, setDocuments] = useState<Record<string, Document>>({});
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedFileId, setSelectedFileIdState] = useState<string | null>(null);
   const [documentState, setDocumentState] = useState<DocumentState>({
     document: null,
-    snapshots: [],
+    versions: [],
     pendingPatch: null
   });
+
+  const persistActiveDocument = useCallback(() => {
+    if (!selectedFileId || !documentState.document) return;
+
+    const updatedDoc = hydrateDocument(documentState.document, selectedFileId);
+    const versions = addVersionSnapshot(updatedDoc.versions, updatedDoc.markdown, updatedDoc.sections, MAX_VERSION_HISTORY, updatedDoc.version);
+    const docWithHistory = { ...updatedDoc, versions };
+
+    setDocuments(prev => ({ ...prev, [selectedFileId]: docWithHistory }));
+    setDocumentState(prev => ({
+      ...prev,
+      document: docWithHistory,
+      versions: docWithHistory.versions
+    }));
+  }, [selectedFileId, documentState.document]);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const data: StorageData = JSON.parse(saved);
-        if (data.version === SCHEMA_VERSION) {
-          setDocuments(data.documents);
+        if (data.version && data.version > SCHEMA_VERSION) {
+          return;
         }
+        const storedDocs = data.documents || {};
+        const normalizedDocs: Record<string, Document> = {};
+
+        Object.entries(storedDocs).forEach(([fileId, savedDoc]) => {
+          normalizedDocs[fileId] = hydrateDocument(savedDoc, fileId);
+        });
+
+        setDocuments(normalizedDocs);
       } catch (e) {
         console.error('Failed to parse documents', e);
       }
@@ -59,86 +107,125 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
   }, [documents]);
 
   useEffect(() => {
-    if (selectedFileId) {
-      let doc = documents[selectedFileId];
-
-      if (!doc) {
-        doc = createDocument(selectedFileId, sampleDocumentContent);
-        setDocuments(prev => ({ ...prev, [selectedFileId]: doc }));
-      }
-
-      setDocumentState(prev => ({
-        ...prev,
-        document: doc,
-        snapshots: prev.snapshots
-      }));
-    } else {
+    if (!selectedFileId) {
       setDocumentState({
         document: null,
-        snapshots: [],
+        versions: [],
         pendingPatch: null
       });
+      return;
     }
+
+    let doc = documents[selectedFileId];
+
+    if (!doc) {
+      doc = hydrateDocument(null, selectedFileId);
+      setDocuments(prev => ({ ...prev, [selectedFileId]: doc }));
+    } else if (!doc.markdown || !doc.sections || !doc.versions) {
+      doc = hydrateDocument(doc, selectedFileId);
+      setDocuments(prev => ({ ...prev, [selectedFileId]: doc }));
+    }
+
+    setDocumentState({
+      document: doc,
+      versions: doc.versions,
+      pendingPatch: null
+    });
   }, [selectedFileId, documents]);
 
+  const setSelectedFileId = (id: string | null) => {
+    persistActiveDocument();
+    setSelectedFileIdState(id);
+  };
+
+  const updateDocumentFromMarkdown = (markdown: string): Document | null => {
+    if (!documentState.document) return null;
+
+    const normalized = normalizeMarkdown(markdown);
+    if (normalized === documentState.document.markdown) {
+      return documentState.document;
+    }
+
+    const sections = parseMarkdownSections(normalized);
+    const blocks = markdownToBlocks(normalized);
+    const updatedDoc: Document = {
+      ...documentState.document,
+      blocks,
+      markdown: normalized,
+      sections,
+      version: documentState.document.version + 1,
+      updatedAt: new Date().toISOString()
+    };
+
+    const versions = addVersionSnapshot(updatedDoc.versions, updatedDoc.markdown, updatedDoc.sections, MAX_VERSION_HISTORY, updatedDoc.version);
+    return { ...updatedDoc, versions };
+  };
+
+  const updateDocumentFromBlocks = (blocks: Block[]): Document | null => {
+    const markdown = blocksToMarkdown(blocks);
+    return updateDocumentFromMarkdown(markdown);
+  };
+
   const updateBlock = (blockId: string, content: string) => {
-    if (!documentState.document) return;
+    if (!documentState.document || !selectedFileId) return;
 
-    const newBlock = { ...documentState.document.blocks.find(b => b.id === blockId)!, content };
-    const patch: PatchOp = { op: 'replace_block', blockId, block: newBlock };
+    const updatedBlocks = documentState.document.blocks.map((block) =>
+      block.id === blockId ? { ...block, content } : block
+    );
+    const updatedDoc = updateDocumentFromBlocks(updatedBlocks);
+    if (!updatedDoc || updatedDoc === documentState.document) return;
 
-    const updatedDoc = applyPatch(documentState.document, [patch]);
-    const snapshot = createSnapshot(updatedDoc);
-
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: updatedDoc }));
+    setDocuments(prev => ({ ...prev, [selectedFileId]: updatedDoc }));
     setDocumentState(prev => ({
+      ...prev,
       document: updatedDoc,
-      snapshots: [...prev.snapshots, snapshot],
+      versions: updatedDoc.versions,
       pendingPatch: null
     }));
   };
 
   const addBlock = (afterBlockId: string | null, type: Block['type'], content: string) => {
-    if (!documentState.document) return;
+    if (!documentState.document || !selectedFileId) return;
 
-    const newBlock = {
+    const newBlock: Block = {
       id: crypto.randomUUID(),
       type,
       content,
       hash: content.length.toString()
     };
 
-    let patch: PatchOp;
-
+    const blocks = [...documentState.document.blocks];
     if (afterBlockId) {
-      patch = { op: 'insert_after', blockId: afterBlockId, block: newBlock };
+      const index = blocks.findIndex(block => block.id === afterBlockId);
+      blocks.splice(index + 1, 0, newBlock);
     } else {
-      patch = { op: 'insert_after', blockId: documentState.document.blocks[documentState.document.blocks.length - 1]?.id || '', block: newBlock };
+      blocks.push(newBlock);
     }
 
-    const updatedDoc = applyPatch(documentState.document, [patch]);
-    const snapshot = createSnapshot(updatedDoc);
+    const updatedDoc = updateDocumentFromBlocks(blocks);
+    if (!updatedDoc || updatedDoc === documentState.document) return;
 
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: updatedDoc }));
+    setDocuments(prev => ({ ...prev, [selectedFileId]: updatedDoc }));
     setDocumentState(prev => ({
+      ...prev,
       document: updatedDoc,
-      snapshots: [...prev.snapshots, snapshot],
+      versions: updatedDoc.versions,
       pendingPatch: null
     }));
   };
 
   const deleteBlock = (blockId: string) => {
-    if (!documentState.document) return;
+    if (!documentState.document || !selectedFileId) return;
 
-    const patch: PatchOp = { op: 'delete_block', blockId };
+    const blocks = documentState.document.blocks.filter(block => block.id !== blockId);
+    const updatedDoc = updateDocumentFromBlocks(blocks);
+    if (!updatedDoc || updatedDoc === documentState.document) return;
 
-    const updatedDoc = applyPatch(documentState.document, [patch]);
-    const snapshot = createSnapshot(updatedDoc);
-
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: updatedDoc }));
+    setDocuments(prev => ({ ...prev, [selectedFileId]: updatedDoc }));
     setDocumentState(prev => ({
+      ...prev,
       document: updatedDoc,
-      snapshots: [...prev.snapshots, snapshot],
+      versions: updatedDoc.versions,
       pendingPatch: null
     }));
   };
@@ -148,58 +235,85 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const applyPendingPatch = () => {
-    if (!documentState.document || !documentState.pendingPatch) return;
+    if (!documentState.document || !documentState.pendingPatch || !selectedFileId) return;
 
-    const updatedDoc = applyPatch(documentState.document, documentState.pendingPatch.ops);
-    const snapshot = createSnapshot(updatedDoc);
+    const patched = applyPatch(documentState.document, documentState.pendingPatch.ops);
+    const updatedDoc = updateDocumentFromBlocks(patched.blocks);
+    if (!updatedDoc || updatedDoc === documentState.document) return;
 
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: updatedDoc }));
-    setDocumentState(prev => ({
+    setDocuments(prev => ({ ...prev, [selectedFileId]: updatedDoc }));
+    setDocumentState({
       document: updatedDoc,
-      snapshots: [...prev.snapshots, snapshot],
+      versions: updatedDoc.versions,
       pendingPatch: null
-    }));
+    });
   };
 
   const resetToSnapshot = (snapshotId: string) => {
-    const snapshot = documentState.snapshots.find(s => s.id === snapshotId);
-    if (!snapshot || !documentState.document) return;
+    const version = documentState.versions.find(v => v.id === snapshotId);
+    if (!version || !documentState.document || !selectedFileId) return;
 
-    const restoredDoc = {
+    const restoredBlocks = markdownToBlocks(version.markdown);
+    const restoredDoc: Document = {
       ...documentState.document,
-      blocks: snapshot.blocks.map(b => ({ ...b })),
-      version: snapshot.version,
+      blocks: restoredBlocks,
+      markdown: version.markdown,
+      sections: version.sections,
+      version: version.version,
       updatedAt: new Date().toISOString()
     };
+    const versions = addVersionSnapshot(restoredDoc.versions, restoredDoc.markdown, restoredDoc.sections, MAX_VERSION_HISTORY, restoredDoc.version);
+    const docWithHistory = { ...restoredDoc, versions };
 
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: restoredDoc }));
-    setDocumentState(prev => ({
-      document: restoredDoc,
-      snapshots: prev.snapshots,
+    setDocuments(prev => ({ ...prev, [selectedFileId]: docWithHistory }));
+    setDocumentState({
+      document: docWithHistory,
+      versions: docWithHistory.versions,
       pendingPatch: null
-    }));
+    });
+  };
+
+  const restoreVersion = (versionId: string) => {
+    if (!documentState.document || !selectedFileId) return;
+    const version = restoreVersionEntry(documentState.document.versions, versionId);
+    if (!version) return;
+
+    const restoredBlocks = markdownToBlocks(version.markdown);
+    const restoredDoc: Document = {
+      ...documentState.document,
+      blocks: restoredBlocks,
+      markdown: version.markdown,
+      sections: version.sections,
+      version: version.version,
+      updatedAt: new Date().toISOString()
+    };
+    const versions = addVersionSnapshot(restoredDoc.versions, restoredDoc.markdown, restoredDoc.sections, MAX_VERSION_HISTORY, restoredDoc.version);
+    const docWithHistory = { ...restoredDoc, versions };
+
+    setDocuments(prev => ({ ...prev, [selectedFileId]: docWithHistory }));
+    setDocumentState({
+      document: docWithHistory,
+      versions: docWithHistory.versions,
+      pendingPatch: null
+    });
   };
 
   const getMarkdown = (): string => {
     if (!documentState.document) return '';
-    return blocksToMarkdown(documentState.document.blocks);
+    return documentState.document.markdown;
   };
 
   const setMarkdown = (markdown: string) => {
-    if (!documentState.document) return;
+    if (!documentState.document || !selectedFileId) return;
+    const updatedDoc = updateDocumentFromMarkdown(markdown);
+    if (!updatedDoc || updatedDoc === documentState.document) return;
 
-    const newBlocks = markdownToBlocks(markdown);
-    const updatedDoc = {
-      ...documentState.document,
-      blocks: newBlocks,
-      version: documentState.document.version + 1,
-      updatedAt: new Date().toISOString()
-    };
-
-    setDocuments(prev => ({ ...prev, [selectedFileId!]: updatedDoc }));
+    setDocuments(prev => ({ ...prev, [selectedFileId]: updatedDoc }));
     setDocumentState(prev => ({
       ...prev,
-      document: updatedDoc
+      document: updatedDoc,
+      versions: updatedDoc.versions,
+      pendingPatch: null
     }));
   };
 
@@ -216,7 +330,8 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
       applyPendingPatch,
       resetToSnapshot,
       getMarkdown,
-      setMarkdown
+      setMarkdown,
+      restoreVersion
     }}>
       {children}
     </DocumentsContext.Provider>
