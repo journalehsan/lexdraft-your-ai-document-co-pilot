@@ -2,12 +2,17 @@
 
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Moon, Sun, Menu, X, Scale } from 'lucide-react';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const buttonBaseClass = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
   const primaryBtn = "bg-primary text-primary-foreground hover:bg-primary/90";
@@ -41,20 +46,20 @@ export function Header() {
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {mounted && theme === 'dark' ? <Sun className="h-5 w-5" /> : mounted && <Moon className="h-5 w-5" />}
           </button>
           <Link href="/app/login" className={`${buttonBaseClass} ${ghostBtn} ${btnMd}`}>Sign in</Link>
           <Link href="/app" className={`${buttonBaseClass} ${primaryBtn} ${btnMd}`}>Open App</Link>
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="flex md:hidden items-center gap-4">
+          <div className="flex md:hidden items-center gap-4">
           <button
             className={`${buttonBaseClass} ${ghostBtn} ${btnSm}`}
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {mounted && theme === 'dark' ? <Sun className="h-5 w-5" /> : mounted && <Moon className="h-5 w-5" />}
           </button>
           <button className="text-foreground" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
