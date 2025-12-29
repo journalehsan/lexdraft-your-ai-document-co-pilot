@@ -18,8 +18,10 @@ export function TopBar() {
   const [provider, setProvider] = useState('OpenRouter');
   const navigate = useNavigate();
   const { settings, updateSettings } = useSettings();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, hasAnyPermission } = useAuth();
   const theme = settings.theme;
+  const canViewUsers = hasAnyPermission(['users:read', 'users:manage']);
+  const canViewRoles = hasAnyPermission(['roles:read', 'roles:manage']);
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 z-50">
@@ -118,6 +120,19 @@ export function TopBar() {
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
+                {(canViewUsers || canViewRoles) && <DropdownMenuSeparator />}
+                {canViewUsers && (
+                  <DropdownMenuItem onClick={() => navigate('/admin/users')}>
+                    <User className="mr-2 h-4 w-4" />
+                    Admin Users
+                  </DropdownMenuItem>
+                )}
+                {canViewRoles && (
+                  <DropdownMenuItem onClick={() => navigate('/admin/roles')}>
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    Admin Roles
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
