@@ -4,7 +4,8 @@ import { requireAnyPermission } from '@/lib/server/guards';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const auth = await requireAnyPermission(req, ['users:update', 'users:manage']);
   if ('response' in auth) {
     return auth.response;
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: 'Invalid status.' }, { status: 400 });
   }
 
-  const paramsList: Array<string> = [status, params.id];
+  const paramsList: Array<string> = [status, id];
   let whereClause = 'WHERE id = $2';
 
   if (!auth.user.is_super_admin) {

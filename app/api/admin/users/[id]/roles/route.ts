@@ -4,7 +4,8 @@ import { requireAnyPermission } from '@/lib/server/guards';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const auth = await requireAnyPermission(req, ['users:update', 'users:manage']);
   if ('response' in auth) {
     return auth.response;
@@ -24,8 +25,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       ? 'id = $1'
       : 'id = $1 AND org_id = $2';
     const userParams = auth.user.is_super_admin
-      ? [params.id]
-      : [params.id, auth.user.org_id];
+      ? [id]
+      : [id, auth.user.org_id];
 
     const userResult = await client.query(`SELECT id FROM users WHERE ${userFilter}`, userParams);
     if (userResult.rows.length === 0) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
-    await client.query('DELETE FROM user_roles WHERE user_id = $1', [params.id]);
+    await client.query('DELETE FROM user_roles WHERE user_id = $1', [id]);
 
     if (roleIds.length > 0) {
       const roleFilter = auth.user.is_super_admin
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           `INSERT INTO user_roles (user_id, role_id)
            VALUES ($1, $2)
            ON CONFLICT DO NOTHING`,
-          [params.id, role.id]
+          [id, role.id]
         );
       }
     }
