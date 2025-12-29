@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { AuthProvider } from "./stores/AuthStore";
 import { SettingsProvider } from "./stores/SettingsStore";
 import { ProjectsProvider } from "./stores/ProjectsStore";
@@ -15,8 +16,9 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import AdminUsers from "./pages/AdminUsers";
-import AdminRoles from "./pages/AdminRoles";
+
+// Lazy load admin routes
+const AdminRoutes = lazy(() => import('./admin/AdminRoutes'));
 
 const queryClient = new QueryClient();
 
@@ -29,7 +31,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter basename="/app">
+              <BrowserRouter basename="/app" future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -48,19 +50,15 @@ const App = () => (
                       <Settings />
                     </ProtectedRoute>
                   } />
-                  <Route path="/admin/users" element={
-                    <ProtectedRoute>
-                      <PermissionRoute permissions={['users:read', 'users:manage', 'users:create', 'users:update']}>
-                        <AdminUsers />
-                      </PermissionRoute>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/roles" element={
-                    <ProtectedRoute>
-                      <PermissionRoute permissions={['roles:read', 'roles:manage', 'roles:create', 'roles:update']}>
-                        <AdminRoles />
-                      </PermissionRoute>
-                    </ProtectedRoute>
+                  {/* Admin routes with lazy loading */}
+                  <Route path="/admin/*" element={
+                    <Suspense fallback={
+                      <div className="min-h-screen flex items-center justify-center bg-background">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                      </div>
+                    }>
+                      <AdminRoutes />
+                    </Suspense>
                   } />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
