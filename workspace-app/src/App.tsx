@@ -8,12 +8,15 @@ import { SettingsProvider } from "./stores/SettingsStore";
 import { ProjectsProvider } from "./stores/ProjectsStore";
 import { DocumentsProvider } from "./stores/DocumentStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PermissionRoute from "./components/auth/PermissionRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AdminUsers from "./pages/AdminUsers";
+import AdminRoles from "./pages/AdminRoles";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +46,20 @@ const App = () => (
                   <Route path="/settings" element={
                     <ProtectedRoute>
                       <Settings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute>
+                      <PermissionRoute permissions={['users:read', 'users:manage', 'users:create', 'users:update']}>
+                        <AdminUsers />
+                      </PermissionRoute>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/roles" element={
+                    <ProtectedRoute>
+                      <PermissionRoute permissions={['roles:read', 'roles:manage', 'roles:create', 'roles:update']}>
+                        <AdminRoles />
+                      </PermissionRoute>
                     </ProtectedRoute>
                   } />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
