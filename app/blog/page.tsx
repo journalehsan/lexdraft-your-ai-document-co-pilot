@@ -2,95 +2,89 @@ import Link from 'next/link';
 import { Header } from '@/components/marketing/Header';
 import { Footer } from '@/components/marketing/Footer';
 import { getAllPosts, getAllTags } from '@/lib/blog';
-import { Calendar, User, Tag } from 'lucide-react';
+import { Calendar, Tag, ChevronRight } from 'lucide-react';
 
 export default function BlogPage() {
   const posts = getAllPosts();
   const tags = getAllTags();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">Blog</h1>
-          <p className="text-xl text-muted-foreground mb-12">
-            Insights, tips, and updates from the LexDraft team
-          </p>
+      <main className="flex-1">
+        {/* Header Section */}
+        <section className="py-20 md:py-32 border-b bg-muted/30">
+          <div className="container">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">Blog</h1>
+            <p className="text-xl text-muted-foreground mb-12 text-center max-w-2xl mx-auto">
+              Insights, tips, and updates from the LexDraft team
+            </p>
 
-          {tags.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                Popular Tags
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            {tags.length > 0 && (
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-2 text-sm font-semibold mb-4 text-muted-foreground">
+                  <Tag className="h-4 w-4" />
+                  <span>Popular Tags</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-background border text-muted-foreground hover:text-foreground hover:border-primary/50 rounded-full text-sm cursor-pointer transition-colors"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-
-          <div className="space-y-8">
-            {posts.length === 0 ? (
-              <p className="text-muted-foreground">No blog posts yet. Check back soon!</p>
-            ) : (
-              posts.map((post) => (
-                <article key={post.slug} className="border-b pb-8 last:border-b-0">
-                  <Link href={`/blog/${post.slug}`} className="group">
-                    <h2 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h2>
-                  </Link>
-
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(post.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      {post.author}
-                    </span>
-                  </div>
-
-                  <p className="text-muted-foreground mb-3">{post.description}</p>
-
-                  {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Read more →
-                  </Link>
-                </article>
-              ))
             )}
           </div>
-        </div>
+        </section>
+
+        {/* Blog Posts */}
+        <section className="py-20 md:py-32">
+          <div className="container">
+            <div className="max-w-5xl mx-auto">
+              {posts.length === 0 ? (
+                <p className="text-center text-muted-foreground">No blog posts yet. Check back soon!</p>
+              ) : (
+                <div className="grid gap-8 md:grid-cols-3">
+                  {posts.map((post) => (
+                    <Link key={post.slug} href={`/blog/${post.slug}`} className="group cursor-pointer space-y-4">
+                      <div className="aspect-video w-full rounded-xl bg-muted/50 border overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/10 group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                          {post.tags.length > 0 && (
+                            <>
+                              <span className="text-primary bg-primary/5 px-2 py-0.5 rounded-full">{post.tags[0]}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(post.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                        <h2 className="text-xl font-bold group-hover:text-primary transition-colors line-clamp-2">{post.title}</h2>
+                        <p className="text-muted-foreground line-clamp-3">{post.description}</p>
+                        <div className="flex items-center gap-2 text-primary text-sm font-medium group-hover:gap-3 transition-all">
+                          Read more <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

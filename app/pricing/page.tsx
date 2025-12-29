@@ -1,109 +1,80 @@
 import { Header } from '@/components/marketing/Header';
 import { Footer } from '@/components/marketing/Footer';
-import { Check } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+
+const buttonBaseClass = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+const primaryBtn = "bg-primary text-primary-foreground hover:bg-primary/90";
+const outlineBtn = "border border-input bg-background hover:bg-accent hover:text-accent-foreground";
+const btnMd = "h-10 px-4 py-2";
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-20">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
-          <p className="text-xl text-muted-foreground">
-            Choose the plan that works best for you
-          </p>
-        </div>
+      <main className="flex-1">
+        <section className="py-20 md:py-32">
+          <div className="container space-y-12">
+            <div className="text-center space-y-4 max-w-2xl mx-auto">
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Simple, transparent pricing</h1>
+              <p className="text-lg text-muted-foreground">
+                Choose the plan that fits your practice size and security needs.
+              </p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+                {/* Starter */}
+                <div className="rounded-xl border bg-card p-8 shadow-sm flex flex-col">
+                    <h3 className="font-semibold text-lg">Starter</h3>
+                    <div className="mt-4 mb-6">
+                        <span className="text-4xl font-bold">$0</span>
+                        <span className="text-muted-foreground">/mo</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-6">Perfect for solo practitioners exploring AI drafting.</p>
+                    <ul className="space-y-3 mb-8 flex-1 text-sm">
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 5 Projects</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Basic Templates</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Community Support</li>
+                    </ul>
+                    <Link href="/app" className={`${buttonBaseClass} ${outlineBtn} ${btnMd} w-full`}>Get Started</Link>
+                </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Free Tier */}
-          <div className="border rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-2">Free</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">$0</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>5 projects</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>100 AI generations/month</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Basic editor</span>
-              </li>
-            </ul>
-            <button className="w-full py-2 border border-border rounded-md hover:bg-accent transition-colors">
-              Get Started
-            </button>
-          </div>
+                {/* Team */}
+                <div className="rounded-xl border-2 border-primary bg-card p-8 shadow-md flex flex-col relative scale-105">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</div>
+                    <h3 className="font-semibold text-lg text-primary">Team</h3>
+                    <div className="mt-4 mb-6">
+                        <span className="text-4xl font-bold">$49</span>
+                        <span className="text-muted-foreground">/user/mo</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-6">For small firms needing collaboration and advanced models.</p>
+                    <ul className="space-y-3 mb-8 flex-1 text-sm">
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Unlimited Projects</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Advanced AI Models</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Collaborative Editing</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Priority Support</li>
+                    </ul>
+                    <Link href="/app" className={`${buttonBaseClass} ${primaryBtn} ${btnMd} w-full`}>Start Free Trial</Link>
+                </div>
 
-          {/* Pro Tier */}
-          <div className="border-2 border-primary rounded-lg p-8 relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-              Popular
+                {/* On-Prem */}
+                <div className="rounded-xl border bg-card p-8 shadow-sm flex flex-col">
+                    <h3 className="font-semibold text-lg">On-Premise</h3>
+                    <div className="mt-4 mb-6">
+                        <span className="text-4xl font-bold">Custom</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-6">Full control for enterprise compliance requirements.</p>
+                    <ul className="space-y-3 mb-8 flex-1 text-sm">
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Self-hosted Deployment</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Local LLM (Ollama) Support</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> SSO / SAML</li>
+                        <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Dedicated Account Manager</li>
+                    </ul>
+                    <Link href="/contact" className={`${buttonBaseClass} ${outlineBtn} ${btnMd} w-full`}>Contact Sales</Link>
+                </div>
             </div>
-            <h3 className="text-2xl font-bold mb-2">Pro</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">$19</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Unlimited projects</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Unlimited AI generations</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Advanced editor features</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Priority support</span>
-              </li>
-            </ul>
-            <button className="w-full py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
-              Get Started
-            </button>
           </div>
-
-          {/* Enterprise Tier */}
-          <div className="border rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">Custom</span>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Everything in Pro</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>On-premise deployment</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Custom AI models</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary mt-0.5" />
-                <span>Dedicated support</span>
-              </li>
-            </ul>
-            <button className="w-full py-2 border border-border rounded-md hover:bg-accent transition-colors">
-              Contact Sales
-            </button>
-          </div>
-        </div>
+        </section>
       </main>
 
       <Footer />
