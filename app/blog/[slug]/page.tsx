@@ -93,7 +93,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-serif text-foreground antialiased selection:bg-blue-900/20 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 font-serif text-foreground antialiased selection:bg-blue-900/20 dark:selection:bg-blue-400/20 flex flex-col">
         <Header />
 
         <main className="flex-1">
@@ -114,16 +114,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                       <Link
                         key={tag}
                         href={`/blog?tag=${encodeURIComponent(tag)}`}
-                        className="text-xs font-light uppercase tracking-wider px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                        className="text-xs font-light uppercase tracking-wider px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                       >
                         {tag}
                       </Link>
                     ))}
                   </div>
-                  <h1 className="text-4xl md:text-6xl font-light tracking-tight mb-8 leading-[1.1] text-blue-950">
+                  <h1 className="text-4xl md:text-6xl font-light tracking-tight mb-8 leading-[1.1] text-blue-950 dark:text-blue-100">
                     {post.title}
                   </h1>
-                  <div className="flex items-center justify-between py-8 border-y border-slate-200 flex-wrap gap-6">
+                  <div className="flex items-center justify-between py-8 border-y border-slate-200 dark:border-slate-700 flex-wrap gap-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-light text-lg">
                         {post.author.charAt(0).toUpperCase()}
@@ -150,7 +150,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <MDXRemote source={post.content} />
                 </div>
 
-                <div className="mt-20 pt-12 border-t border-slate-200">
+                <div className="mt-20 pt-12 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex items-center gap-4 mb-8">
                     <span className="text-sm font-light text-slate-600">Share this legal & AI insight:</span>
                     <ShareButtons
@@ -160,12 +160,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   </div>
                 </div>
 
-                <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-200 flex gap-8 flex-col sm:flex-row shadow-sm">
+                <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-900/30 border border-blue-200 dark:border-blue-800 flex gap-8 flex-col sm:flex-row shadow-sm">
                   <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-light text-2xl shrink-0 shadow-sm">
                     {post.author.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-light text-2xl mb-3 text-blue-950">Written by {post.author}</h4>
+                     <h4 className="font-light text-2xl mb-3 text-blue-950 dark:text-blue-100">Written by {post.author}</h4>
                     <p className="text-slate-600 text-base mb-4 leading-relaxed font-light">
                       Expert insights on AI-powered legal document drafting, modern productivity tools, and the future of intelligent document engineering for professionals.
                     </p>
@@ -186,11 +186,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </div>
                     <div className="grid gap-6 md:grid-cols-3">
                       {relatedPosts.map((related) => (
-                        <Link
-                          key={related.slug}
-                          href={`/blog/${related.slug}`}
-                          className="group p-6 rounded-2xl border border-slate-200 bg-white hover:bg-blue-50/30 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md"
-                        >
+                         <Link
+                           key={related.slug}
+                           href={`/blog/${related.slug}`}
+                           className="group p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-blue-50/30 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 shadow-sm hover:shadow-md"
+                         >
                           <h4 className="font-light text-lg group-hover:text-blue-900 transition-colors line-clamp-2 mb-3 leading-tight">
                             {related.title}
                           </h4>
@@ -241,7 +241,7 @@ function ArticleSidebar({
     <aside className="hidden xl:block xl:w-80 shrink-0">
       <div className="sticky top-32 space-y-12">
         {headings.length > 0 && (
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center gap-2 text-blue-900 font-light text-sm mb-4 tracking-wider">
               <span className="w-6 h-[1px] bg-blue-900"></span>
               CONTENTS
@@ -262,7 +262,7 @@ function ArticleSidebar({
           </div>
         )}
 
-        <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-white shadow-lg">
+        <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 dark:from-blue-800 dark:to-slate-800 text-white shadow-lg">
           <div className="flex items-center gap-2 text-blue-200 font-light text-sm mb-3 tracking-wider">
             <CheckCircle2 className="h-4 w-4" />
             TRY LEXDRAFT
@@ -301,7 +301,7 @@ function ArticleSidebar({
         </div>
 
         {popularPosts.length > 0 && (
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center gap-2 text-slate-700 font-light text-sm mb-6 tracking-wider">
               <span className="w-6 h-[1px] bg-slate-400"></span>
               MOST READ
@@ -323,7 +323,7 @@ function ArticleSidebar({
           </div>
         )}
 
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 shadow-sm">
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900/30 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 shadow-sm">
           <h4 className="font-light text-lg mb-4 text-blue-950">About LexDraft</h4>
           <p className="text-slate-600 text-sm leading-relaxed mb-4 font-light">
             The AI-powered document co-pilot that combines intelligent drafting assistance with professional-grade WYSIWYG editing tools for modern professionals.
