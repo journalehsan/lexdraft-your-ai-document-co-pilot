@@ -42,6 +42,7 @@
   "exclude": [
     "node_modules",
     "workspace-app",
-    "lexdraft-knowledge-base-design"
+    "lexdraft-knowledge-base-design",
+    "lexdraft-admin-ui-design"
   ]
 }
