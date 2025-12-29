@@ -63,6 +63,7 @@ export function VditorEditor({
 
     const vditor = new Vditor(containerRef.current, {
       height,
+      lang: 'en_US',
       theme: currentTheme,
       mode: 'wysiwyg',
       placeholder: 'Start writing...',
