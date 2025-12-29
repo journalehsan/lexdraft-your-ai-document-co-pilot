@@ -1,107 +1,170 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+
+const REQUEST_TIMEOUT_MS = 10000;
+
+const fetchWithTimeout = async (input: RequestInfo, init: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
-  org?: string;
+  orgId: string;
+  orgName: string;
+  status: string;
+  isSuperAdmin: boolean;
+}
+
+export interface Role {
+  id: string;
+  name: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  roles: Role[];
+  permissions: string[];
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  refreshSession: () => Promise<void>;
+  hasPermission: (permissionKey: string) => boolean;
+  hasAnyPermission: (permissionKeys: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_TOKEN_KEY = 'lexdraft_auth_token';
-const STORAGE_USER_KEY = 'lexdraft_auth_user';
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem(STORAGE_TOKEN_KEY);
-    const savedUser = localStorage.getItem(STORAGE_USER_KEY);
-
-    if (savedToken && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
-        localStorage.removeItem(STORAGE_TOKEN_KEY);
-        localStorage.removeItem(STORAGE_USER_KEY);
-      }
-    }
+  const applySession = useCallback((payload: { user: User; roles: Role[]; permissions: string[] }) => {
+    setUser(payload.user);
+    setRoles(payload.roles || []);
+    setPermissions(payload.permissions || []);
+    setIsAuthenticated(true);
   }, []);
 
-  const login = async (email: string, _password: string, _rememberMe: boolean = false) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (email) {
-          const mockUser: User = {
-            id: crypto.randomUUID(),
-            name: email.split('@')[0],
-            email,
-            role: 'user',
-            org: 'Default Org'
-          };
-          const mockToken = `mock_jwt_${Date.now()}`;
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setRoles([]);
+    setPermissions([]);
+    setIsAuthenticated(false);
+  }, []);
 
-          localStorage.setItem(STORAGE_TOKEN_KEY, mockToken);
-          localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(mockUser));
+  const refreshSession = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetchWithTimeout('/api/auth/session', { credentials: 'include' });
+      if (!response.ok) {
+        clearSession();
+        return;
+      }
+      const data = await response.json();
+      applySession(data);
+    } catch {
+      clearSession();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [applySession, clearSession]);
 
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          resolve();
-        } else {
-          reject(new Error('Invalid credentials'));
-        }
-      }, 500);
+  useEffect(() => {
+    void refreshSession();
+  }, [refreshSession]);
+
+  const login = async (email: string, password: string, rememberMe: boolean = false) => {
+    const response = await fetchWithTimeout('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password, rememberMe }),
     });
+
+    if (!response.ok) {
+      throw new Error('Invalid credentials');
+    }
+
+    const data = await response.json();
+    applySession(data);
   };
 
   const register = async (name: string, email: string, password: string) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (name && email && password) {
-          const mockUser: User = {
-            id: crypto.randomUUID(),
-            name,
-            email,
-            role: 'user',
-            org: 'Default Org'
-          };
-          const mockToken = `mock_jwt_${Date.now()}`;
-
-          localStorage.setItem(STORAGE_TOKEN_KEY, mockToken);
-          localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(mockUser));
-
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          resolve();
-        } else {
-          reject(new Error('Invalid registration data'));
-        }
-      }, 500);
+    const response = await fetchWithTimeout('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
     });
+
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+
+    await login(email, password, true);
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem(STORAGE_USER_KEY);
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    await fetchWithTimeout('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    clearSession();
   };
+
+  const hasPermission = useCallback(
+    (permissionKey: string) => {
+      if (!user) {
+        return false;
+      }
+      if (user.isSuperAdmin) {
+        return true;
+      }
+      return permissions.includes(permissionKey);
+    },
+    [permissions, user]
+  );
+
+  const hasAnyPermission = useCallback(
+    (permissionKeys: string[]) => {
+      if (!user) {
+        return false;
+      }
+      if (user.isSuperAdmin) {
+        return true;
+      }
+      return permissionKeys.some((key) => permissions.includes(key));
+    },
+    [permissions, user]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register }}>
+    <AuthContext.Provider value={{
+      user,
+      roles,
+      permissions,
+      isAuthenticated,
+      isLoading,
+      login,
+      logout,
+      register,
+      refreshSession,
+      hasPermission,
+      hasAnyPermission,
+    }}>
       {children}
     </AuthContext.Provider>
   );
