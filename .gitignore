@@ -20,6 +20,9 @@ next-env.d.ts
 nohup.out
 .env
 
+# TypeScript
+*.tsbuildinfo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
