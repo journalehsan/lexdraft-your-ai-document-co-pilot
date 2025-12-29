@@ -30,3 +30,6 @@ nohup.out
 *.njsproj
 *.sln
 *.sw?
+
+# Template designs (reference only)
+lexdraft-knowledge-base-design/

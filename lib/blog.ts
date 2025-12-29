@@ -12,6 +12,7 @@ export interface BlogPost {
   tags: string[];
   author: string;
   content: string;
+  readTime?: string;
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -36,6 +37,7 @@ export function getAllPosts(): BlogPost[] {
         tags: data.tags || [],
         author: data.author || 'LexDraft Team',
         content,
+        readTime: calculateReadTime(content),
       };
     });
 
@@ -68,6 +70,7 @@ export function getPostBySlug(slug: string): BlogPost | null {
       tags: data.tags || [],
       author: data.author || 'LexDraft Team',
       content,
+      readTime: calculateReadTime(content),
     };
   } catch (error) {
     return null;
@@ -83,4 +86,11 @@ export function getAllTags(): string[] {
   });
 
   return Array.from(tags).sort();
+}
+
+export function calculateReadTime(content: string): string {
+  const wordsPerMinute = 200;
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} min read`;
 }
