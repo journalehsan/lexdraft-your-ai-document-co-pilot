@@ -1,0 +1,43 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: lexdraft-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - lexdraft-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: lexdraft-postgres
+    environment:
+      POSTGRES_USER: lexdraft
+      POSTGRES_PASSWORD: lexdraft_dev_password
+      POSTGRES_DB: lexdraft
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lexdraft-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lexdraft"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  lexdraft-network:
+    driver: bridge
