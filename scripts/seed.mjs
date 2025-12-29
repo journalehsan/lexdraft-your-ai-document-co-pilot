@@ -70,6 +70,47 @@ const roleDefinitions = [
   },
 ];
 
+const pricingPlans = [
+  {
+    name: 'Starter',
+    slug: 'starter',
+    description: 'Perfect for solo practitioners exploring AI drafting.',
+    priceCents: 0,
+    priceSuffix: '/mo',
+    ctaLabel: 'Get Started',
+    ctaHref: '/app',
+    isFeatured: false,
+    sortOrder: 1,
+    features: ['5 Projects', 'Basic Templates', 'Community Support'],
+    tokenLimit: 20000,
+  },
+  {
+    name: 'Team',
+    slug: 'team',
+    description: 'For small firms needing collaboration and advanced models.',
+    priceCents: 4900,
+    priceSuffix: '/user/mo',
+    ctaLabel: 'Start Free Trial',
+    ctaHref: '/app',
+    isFeatured: true,
+    sortOrder: 2,
+    features: ['Unlimited Projects', 'Advanced AI Models', 'Collaborative Editing', 'Priority Support'],
+    tokenLimit: 20000,
+  },
+  {
+    name: 'On-Premise',
+    slug: 'on-premise',
+    description: 'Full control for enterprise compliance requirements.',
+    priceDisplay: 'Custom',
+    ctaLabel: 'Contact Sales',
+    ctaHref: '/contact',
+    isFeatured: false,
+    sortOrder: 3,
+    features: ['Self-hosted Deployment', 'Local LLM (Ollama) Support', 'SSO / SAML', 'Dedicated Account Manager'],
+    tokenLimit: 0,
+  },
+];
+
 const ensurePermissions = async (client) => {
   for (const permission of permissions) {
     await client.query(
@@ -77,6 +118,43 @@ const ensurePermissions = async (client) => {
        VALUES ($1, $2)
        ON CONFLICT (key) DO UPDATE SET description = EXCLUDED.description`,
       [permission.key, permission.description]
+    );
+  }
+};
+
+const ensurePricingPlans = async (client) => {
+  for (const plan of pricingPlans) {
+    await client.query(
+      `INSERT INTO pricing_plans
+        (name, slug, description, price_cents, price_display, price_suffix, cta_label, cta_href, is_featured, sort_order, features, token_limit)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       ON CONFLICT (slug) DO UPDATE SET
+         name = EXCLUDED.name,
+         description = EXCLUDED.description,
+         price_cents = EXCLUDED.price_cents,
+         price_display = EXCLUDED.price_display,
+         price_suffix = EXCLUDED.price_suffix,
+         cta_label = EXCLUDED.cta_label,
+         cta_href = EXCLUDED.cta_href,
+         is_featured = EXCLUDED.is_featured,
+         sort_order = EXCLUDED.sort_order,
+         features = EXCLUDED.features,
+         token_limit = EXCLUDED.token_limit,
+         updated_at = now()`,
+      [
+        plan.name,
+        plan.slug,
+        plan.description,
+        plan.priceCents ?? null,
+        plan.priceDisplay ?? null,
+        plan.priceSuffix ?? null,
+        plan.ctaLabel,
+        plan.ctaHref,
+        plan.isFeatured,
+        plan.sortOrder ?? 0,
+        plan.features,
+        plan.tokenLimit ?? null,
+      ]
     );
   }
 };
@@ -150,6 +228,52 @@ const ensureSuperAdmin = async (client, orgId) => {
       [userResult.rows[0].id, adminRole.rows[0].id]
     );
   }
+
+  return userResult.rows[0].id;
+};
+
+const ensureUserProfile = async (client, userId) => {
+  await client.query(
+    `INSERT INTO user_profiles (user_id, full_name, organization_name, timezone, language)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (user_id) DO UPDATE SET
+       full_name = EXCLUDED.full_name,
+       organization_name = EXCLUDED.organization_name,
+       timezone = EXCLUDED.timezone,
+       language = EXCLUDED.language,
+       updated_at = now()`,
+    [userId, SUPER_ADMIN_NAME, 'LexDraft Law Firm', 'EST', 'English']
+  );
+};
+
+const ensureUserPlan = async (client, userId, planSlug) => {
+  const planResult = await client.query('SELECT id FROM pricing_plans WHERE slug = $1', [planSlug]);
+  if (!planResult.rows[0]) {
+    return;
+  }
+  await client.query(
+    `UPDATE users SET plan_id = $1, updated_at = now()
+     WHERE id = $2`,
+    [planResult.rows[0].id, userId]
+  );
+};
+
+const ensureUsage = async (client, userId) => {
+  const now = new Date();
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  await client.query(
+    `INSERT INTO ai_usage
+      (user_id, period_start, period_end, tokens_used, token_limit, cache_savings_gb, savings_cents)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     ON CONFLICT (user_id, period_start, period_end) DO UPDATE SET
+       tokens_used = EXCLUDED.tokens_used,
+       token_limit = EXCLUDED.token_limit,
+       cache_savings_gb = EXCLUDED.cache_savings_gb,
+       savings_cents = EXCLUDED.savings_cents,
+       updated_at = now()`,
+    [userId, periodStart, periodEnd, 13000, 20000, 4.2, 12400]
+  );
 };
 
 const run = async () => {
@@ -163,7 +287,11 @@ const run = async () => {
     await ensurePermissions(client);
     const orgId = await getOrganizationId(client);
     await ensureRoles(client, orgId);
-    await ensureSuperAdmin(client, orgId);
+    await ensurePricingPlans(client);
+    const superAdminId = await ensureSuperAdmin(client, orgId);
+    await ensureUserProfile(client, superAdminId);
+    await ensureUserPlan(client, superAdminId, 'team');
+    await ensureUsage(client, superAdminId);
     await client.query('COMMIT');
     console.log('RBAC seed completed successfully.');
   } catch (error) {

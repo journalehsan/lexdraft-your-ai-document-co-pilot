@@ -229,6 +229,13 @@ install_deps() {
     print_success "Dependencies installed!"
 }
 
+migrate_db() {
+    print_header
+    print_info "Running database migrations..."
+    node scripts/migrate.mjs
+    print_success "Migrations completed!"
+}
+
 show_help() {
     print_header
     echo ""
@@ -242,6 +249,7 @@ show_help() {
     echo "  logs [type] Show logs (types: nginx, postgres, dev, all)"
     echo "  db          Open PostgreSQL shell"
     echo "  install     Install npm dependencies"
+    echo "  migrate     Run database migrations"
     echo "  help        Show this help message"
     echo ""
     echo "Examples:"
@@ -249,6 +257,7 @@ show_help() {
     echo "  ./manage.sh logs nginx     # View nginx logs"
     echo "  ./manage.sh db             # Connect to database"
     echo "  ./manage.sh stop           # Stop everything"
+    echo "  ./manage.sh migrate        # Run migrations"
     echo ""
 }
 
@@ -274,6 +283,9 @@ case "${1:-help}" in
         ;;
     install)
         install_deps
+        ;;
+    migrate|--migrate)
+        migrate_db
         ;;
     help|--help|-h)
         show_help

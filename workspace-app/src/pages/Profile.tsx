@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TopBar } from '@/components/layout/TopBar';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,14 +12,110 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { projects } from '@/data/mockData';
-import { Laptop, Smartphone, ShieldCheck, CreditCard, Save } from 'lucide-react';
+import { useAuth } from '@/stores/AuthStore';
+import { Laptop, Smartphone, ShieldCheck, Save } from 'lucide-react';
+
+interface PlanData {
+  id: string;
+  name: string;
+  slug: string;
+  tokenLimit: number | null;
+  priceCents: number | null;
+  priceDisplay: string | null;
+  priceSuffix: string | null;
+}
+
+interface UsageData {
+  tokensUsed: number;
+  tokenLimit: number | null;
+  cacheSavingsGb: number;
+  savingsCents: number;
+  periodStart: string;
+  periodEnd: string;
+}
 
 export default function Profile() {
-  const [name, setName] = useState('John Doe');
-  const [org, setOrg] = useState('LexDraft Law Firm');
+  const { user, refreshSession } = useAuth();
+  const [name, setName] = useState(user?.name ?? '');
+  const [org, setOrg] = useState(user?.orgName ?? '');
   const [timezone, setTimezone] = useState('EST');
   const [language, setLanguage] = useState('English');
   const [nameError, setNameError] = useState('');
+  const [plan, setPlan] = useState<PlanData | null>(null);
+  const [usage, setUsage] = useState<UsageData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const initials = useMemo(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return 'NA';
+    }
+    const parts = trimmed.split(/\s+/);
+    return parts.length === 1
+      ? parts[0].slice(0, 2).toUpperCase()
+      : `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }, [name]);
+
+  const usagePercent = useMemo(() => {
+    const tokenLimit = usage?.tokenLimit ?? plan?.tokenLimit ?? 0;
+    if (!tokenLimit) {
+      return 0;
+    }
+    return Math.min(100, Math.round((usage?.tokensUsed ?? 0) / tokenLimit * 100));
+  }, [plan?.tokenLimit, usage?.tokenLimit, usage?.tokensUsed]);
+
+  const tokensUsed = usage?.tokensUsed ?? 0;
+  const tokenLimit = usage?.tokenLimit ?? plan?.tokenLimit ?? 0;
+  const cacheSavingsGb = usage?.cacheSavingsGb ?? 0;
+  const savingsCents = usage?.savingsCents ?? 0;
+
+  const formatTokens = (value: number) =>
+    new Intl.NumberFormat('en-US').format(value);
+
+  const formatCurrency = (valueCents: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(valueCents / 100);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/profile', { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error('Failed to load profile');
+        }
+        const data = await response.json();
+        if (!isMounted) {
+          return;
+        }
+        setName(data.profile?.name ?? user?.name ?? '');
+        setOrg(data.profile?.orgName ?? user?.orgName ?? '');
+        setTimezone(data.profile?.timezone ?? 'EST');
+        setLanguage(data.profile?.language ?? 'English');
+        setPlan(data.plan ?? null);
+        setUsage(data.usage ?? null);
+      } catch {
+        if (isMounted) {
+          toast.error('Unable to load profile settings');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.name, user?.orgName]);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -27,7 +123,31 @@ export default function Profile() {
       return;
     }
     setNameError('');
-    toast.success('Profile saved successfully');
+    setIsSaving(true);
+    fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        name,
+        organizationName: org,
+        timezone,
+        language,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Unable to save profile');
+        }
+        toast.success('Profile saved successfully');
+        return refreshSession();
+      })
+      .catch(() => {
+        toast.error('Unable to save profile');
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
   };
 
   return (
@@ -52,9 +172,9 @@ export default function Profile() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline">Cancel</Button>
-                <Button onClick={handleSave} className="gap-2">
+                <Button onClick={handleSave} className="gap-2" disabled={isSaving || isLoading}>
                   <Save className="h-4 w-4" />
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </div>
@@ -69,11 +189,15 @@ export default function Profile() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4 mb-4">
                     <Avatar className="h-16 w-16 bg-primary">
-                      <AvatarFallback className="text-primary-foreground text-xl font-bold">JD</AvatarFallback>
+                      <AvatarFallback className="text-primary-foreground text-xl font-bold">
+                        {initials}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <Badge variant="secondary" className="mb-1">Attorney</Badge>
-                      <p className="text-sm text-muted-foreground">User ID: 8923-XJ</p>
+                      <p className="text-sm text-muted-foreground">
+                        User ID: {user?.id ? user.id.slice(0, 8).toUpperCase() : 'N/A'}
+                      </p>
                     </div>
                   </div>
 
@@ -91,7 +215,12 @@ export default function Profile() {
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" value="john.doe@lexdraft.com" readOnly className="bg-muted" />
+                    <Input
+                      id="email"
+                      value={user?.email ?? ''}
+                      readOnly
+                      className="bg-muted"
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -140,7 +269,7 @@ export default function Profile() {
                         <CardDescription>Monitor your current usage.</CardDescription>
                       </div>
                       <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                        Team / On-Prem Hybrid
+                        {plan?.name ?? 'Starter'}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -148,10 +277,14 @@ export default function Profile() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Monthly Token Usage</span>
-                        <span className="font-medium">65%</span>
+                        <span className="font-medium">{usagePercent}%</span>
                       </div>
-                      <Progress value={65} className="h-2" />
-                      <p className="text-[10px] text-muted-foreground text-right">13,000 / 20,000 tokens</p>
+                      <Progress value={usagePercent} className="h-2" />
+                      <p className="text-[10px] text-muted-foreground text-right">
+                        {tokenLimit
+                          ? `${formatTokens(tokensUsed)} / ${formatTokens(tokenLimit)} tokens`
+                          : `${formatTokens(tokensUsed)} tokens`}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -160,11 +293,13 @@ export default function Profile() {
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-medium">Cache Savings</p>
-                        <p className="text-lg font-serif font-bold">4.2 GB</p>
+                        <p className="text-lg font-serif font-bold">{cacheSavingsGb.toFixed(1)} GB</p>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-muted-foreground">Estimated savings</p>
-                        <p className="text-xs font-medium text-green-600">+$124.00</p>
+                        <p className="text-xs font-medium text-green-600">
+                          +{formatCurrency(savingsCents)}
+                        </p>
                       </div>
                     </div>
                   </CardContent>

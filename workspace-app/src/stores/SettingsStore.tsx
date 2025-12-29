@@ -34,25 +34,44 @@ interface SettingsContextType {
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const THEME_STORAGE_KEY = 'lexdraft_theme';
+
+const loadSettings = (userId: string) => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_SETTINGS;
+  }
+
+  const saved = localStorage.getItem(`lexdraft_settings_${userId}`);
+  if (saved) {
+    try {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    } catch (e) {
+      console.error('Failed to parse settings', e);
+    }
+  }
+
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+  return savedTheme ? { ...DEFAULT_SETTINGS, theme: savedTheme } : DEFAULT_SETTINGS;
+};
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id || 'guest';
 
   const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem(`lexdraft_settings_${userId}`);
-    if (saved) {
-      try {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-      } catch (e) {
-        console.error('Failed to parse settings', e);
-      }
-    }
-    return DEFAULT_SETTINGS;
+    return loadSettings(userId);
   });
 
   useEffect(() => {
+    setSettings(loadSettings(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     localStorage.setItem(`lexdraft_settings_${userId}`, JSON.stringify(settings));
+    localStorage.setItem(THEME_STORAGE_KEY, settings.theme);
     
     // Apply theme
     const root = window.document.documentElement;
