@@ -9,11 +9,16 @@ lerna-debug.log*
 
 node_modules
 dist
+workspace-app/dist
 !public/vditor/dist/
 !public/vditor/dist/**
 dist-ssr
 *.local
 .next
+next-env.d.ts
+.dev.pid
+nohup.out
+.env
 
 # Editor directories and files
 .vscode/*
