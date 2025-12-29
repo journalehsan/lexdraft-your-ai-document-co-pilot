@@ -43,6 +43,7 @@
     "node_modules",
     "workspace-app",
     "lexdraft-knowledge-base-design",
-    "lexdraft-admin-ui-design"
+    "lexdraft-admin-ui-design",
+    "modern-b2b-auth-ui"
   ]
 }
