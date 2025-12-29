@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexDraft - Legal AI Document Workspace</title>
+    <style>
+        /* 
+         * DESIGN TOKENS & THEME 
+         * Calm enterprise palette: Slate/Zinc 
+         */
+        :root {
+            /* Light Mode Variables */
+            --bg-body: #F9FAFB;
+            --bg-surface: #FFFFFF;
+            --bg-surface-secondary: #F3F4F6;
+            --bg-accent-subtle: #EFF6FF;
+            
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --text-tertiary: #9CA3AF;
+            
+            --border-subtle: #E5E7EB;
+            --border-focus: #BFDBFE;
+            
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-text: #FFFFFF;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg-body: #0F1117; /* Very deep slate, almost black */
+            --bg-surface: #181B24; /* Slightly lighter for cards */
+            --bg-surface-secondary: #1F2937;
+            --bg-accent-subtle: #1E3A8A;
+            
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --text-tertiary: #6B7280;
+            
+            --border-subtle: #2D3748;
+            --border-focus: #3B82F6;
+            
+            --primary: #3B82F6; /* Slightly brighter blue for dark mode */
+            --primary-hover: #60A5FA;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* RESET & BASE */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px; /* Offset for sticky header */
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { text-decoration: none; color: inherit; transition: opacity 0.2s; }
+        ul { list-style: none; }
+        
+        /* UTILITIES */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        .section-padding { padding: 80px 0; }
+        
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .flex-col { flex-direction: column; }
+        .gap-4 { gap: 16px; }
+        .gap-8 { gap: 32px; }
+        
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-muted { color: var(--text-secondary); }
+        .font-semibold { font-weight: 600; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        
+        /* TYPOGRAPHY */
+        h1, h2, h3, h4 {
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        
+        h1 { font-size: 3rem; margin-bottom: 24px; }
+        h2 { font-size: 2.25rem; margin-bottom: 16px; }
+        h3 { font-size: 1.25rem; margin-bottom: 8px; }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-text);
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+
+        .btn-secondary {
+            background-color: var(--bg-surface);
+            border-color: var(--border-subtle);
+            color: var(--text-primary);
+        }
+        .btn-secondary:hover { border-color: var(--text-tertiary); background-color: var(--bg-surface-secondary); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover { color: var(--text-primary); background-color: var(--bg-surface-secondary); }
+
+        /* COMPONENT: NAVBAR */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(var(--bg-body), 0.8); /* Fallback */
+            /* Using CSS var normally doesn't work in rgba, so using backdrop filter heavily */
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            height: 70px;
+        }
+        
+        /* Backdrop hack for solid colors */
+        @supports (backdrop-filter: blur(10px)) {
+            .navbar {
+                background-color: transparent;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+        }
+
+        .nav-content { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+        
+        .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .logo-icon { width: 24px; height: 24px; background: var(--primary); border-radius: 6px; }
+        
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+        .nav-links a:hover { color: var(--primary); }
+
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* THEME TOGGLE */
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-toggle:hover { background-color: var(--bg-surface-secondary); color: var(--text-primary); }
+        .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* COMPONENT: HERO */
+        .hero {
+            padding: 100px 0 60px 0;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        .hero-text .subtext {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+
+        /* MOCK APP FRAME */
+        .mock-app {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            height: 450px;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mock-sidebar {
+            width: 80px;
+            border-right: 1px solid var(--border-subtle);
+            background-color: var(--bg-surface-secondary);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .mock-icon { width: 32px; height: 32px; border-radius: 8px; background-color: var(--border-subtle); opacity: 0.5; }
+        .mock-icon.active { background-color: var(--primary); opacity: 1; }
+
+        .mock-main { flex: 1; display: flex; flex-direction: column; }
+        
+        .mock-header {
+            height: 48px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 12px;
+        }
+        .mock-tab {
+            font-size: 12px;
+            padding: 4px 12px;
+            background: var(--bg-surface-secondary);
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+
+        .mock-workspace { flex: 1; display: flex; }
+        
+        .mock-chat {
+            width: 40%;
+            border-right: 1px solid var(--border-subtle);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--bg-body);
+        }
+        .chat-bubble { padding: 10px; border-radius: 8px; font-size: 10px; line-height: 1.4; }
+        .chat-bubble.ai { background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-secondary); align-self: flex-start; width: 90%; }
+        .chat-bubble.user { background: var(--primary); color: white; align-self: flex-end; width: 70%; }
+        .chat-input { height: 36px; border: 1px solid var(--border-subtle); border-radius: 6px; margin-top: 8px; background: var(--bg-surface); }
+
+        .mock-editor {
+            flex: 1;
+            padding: 30px;
+            background: var(--bg-surface);
+        }
+        .skeleton-line { height: 10px; background-color: var(--bg-surface-secondary); margin-bottom: 12px; border-radius: 4px; }
+        .w-80 { width: 80%; } .w-60 { width: 60%; } .w-90 { width: 90%; } .w-40 { width: 40%; }
+
+        /* TRUST STRIP */
+        .trust-strip {
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 24px 0;
+            background: var(--bg-surface-secondary);
+        }
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .badge svg { width: 18px; height: 18px; color: var(--primary); }
+
+        /* CARDS & GRIDS */
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-focus);
+            transform: translateY(-2px);
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-surface-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+        
+        /* TEMPLATES */
+        .template-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .doc-icon { width: 32px; height: 40px; border: 2px solid var(--border-subtle); border-radius: 4px; position: relative; margin-bottom: 12px; }
+        .doc-icon::after { content:''; position: absolute; top: 6px; left: 6px; width: 16px; height: 2px; background: var(--border-subtle); box-shadow: 0 4px 0 var(--border-subtle), 0 8px 0 var(--border-subtle); }
+
+        /* BLOG */
+        .blog-img-placeholder {
+            width: 100%;
+            height: 160px;
+            background-color: var(--bg-surface-secondary);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+        }
+        .blog-meta { font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 8px; display: flex; gap: 8px; }
+        .tag { color: var(--primary); font-weight: 600; }
+
+        /* SECURITY */
+        .security-list li {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            color: var(--text-secondary);
+        }
+        .check-icon { color: var(--primary); flex-shrink: 0; margin-top: 4px; }
+        
+        .security-glance {
+            background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            text-align: center;
+        }
+        .lock-big { width: 64px; height: 64px; margin: 0 auto 20px; color: var(--primary); opacity: 0.8; }
+
+        /* PRICING */
+        .pricing-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 24px;
+        }
+        .pricing-card.highlight {
+            border-color: var(--primary);
+            background-color: var(--bg-surface);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        .pricing-card.highlight::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -12px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .price { font-size: 2.5rem; font-weight: 700; margin: 16px 0; color: var(--text-primary); }
+        .period { font-size: 1rem; font-weight: 400; color: var(--text-tertiary); }
+        
+        /* FOOTER */
+        footer {
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            padding: 60px 0 20px;
+            color: var(--text-secondary);
+        }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a:hover { color: var(--primary); }
+        .disclaimer { border-top: 1px solid var(--border-subtle); padding-top: 20px; text-align: center; font-size: 0.8rem; color: var(--text-tertiary); }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            h1 { font-size: 2.5rem; }
+            .hero { grid-template-columns: 1fr; text-align: center; }
+            .hero-text { display: flex; flex-direction: column; align-items: center; }
+            .hero-btns { justify-content: center; }
+            .mock-app { display: none; /* Simplify for mobile or replace with image */ }
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .nav-links { display: none; } /* Simplified mobile nav for demo */
+            .footer-grid { grid-template-columns: 1fr; text-align: center; gap: 20px; }
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>LexDraft</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#templates">Templates</a></li>
+                <li><a href="#security">Security</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                    <svg class="icon sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+                <a href="/app/login" class="btn btn-secondary">Sign in</a>
+                <a href="/app" class="btn btn-primary">Open App</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="container hero">
+        <div class="hero-text">
+            <h1>Draft legal documents faster, with control.</h1>
+            <p class="subtext">
+                The project-based legal AI workspace. Version control, safe diffs, and privacy-first AI via OpenRouter or on-prem Ollama.
+            </p>
+            <div class="flex gap-4 hero-btns">
+                <a href="/app" class="btn btn-primary">Open the Workspace</a>
+                <a href="/blog" class="btn btn-secondary">Read the Blog</a>
+            </div>
+        </div>
+        
+        <!-- MOCK APP INTERFACE (CSS ONLY) -->
+        <div class="mock-app">
+            <div class="mock-sidebar">
+                <div class="mock-icon active"></div>
+                <div class="mock-icon"></div>
+                <div class="mock-icon"></div>
+            </div>
+            <div class="mock-main">
+                <div class="mock-header">
+                    <div class="mock-tab">Draft_v2.md</div>
+                    <div class="mock-tab">Notes</div>
+                </div>
+                <div class="mock-workspace">
+                    <div class="mock-chat">
+                        <div class="chat-bubble ai">I've analyzed the indemnity clause. It's missing a cap on liability. Shall I draft one?</div>
+                        <div class="chat-bubble user">Yes, cap it at 2x fees.</div>
+                        <div class="chat-bubble ai">Drafting revision... <br>See diff view.</div>
+                        <div style="flex:1"></div>
+                        <div class="chat-input"></div>
+                    </div>
+                    <div class="mock-editor">
+                        <div class="skeleton-line w-60"></div>
+                        <div class="skeleton-line w-90"></div>
+                        <div class="skeleton-line w-80"></div>
+                        <div class="skeleton-line w-90"></div>
+                        <br>
+                        <div class="skeleton-line w-40" style="background-color: var(--border-focus)"></div>
+                        <div class="skeleton-line w-80" style="background-color: rgba(59, 130, 246, 0.1)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- TRUST STRIP -->
+    <section class="trust-strip">
+        <div class="container trust-badges">
+            <div class="badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Not legal advice
+            </div>
+            <div class="badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Audit-friendly
+            </div>
+            <div class="badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                On-prem capable
+            </div>
+            <div class="badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Data retention controls
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="container section-padding">
+        <div class="text-center" style="margin-bottom: 60px;">
+            <h2>Built for the drafting lifecycle</h2>
+            <p class="text-muted">From first draft to final execution, maintain context and control.</p>
+        </div>
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
+                <h3>Project-Based Drafting</h3>
+                <p class="text-muted text-sm">Organize documents by client or matter. Keep chat context isolated to specific projects.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+                <h3>WYSIWYG Markdown</h3>
+                <p class="text-muted text-sm">Clean, Vditor-powered editing experience. Focus on the text without formatting headaches.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg></div>
+                <h3>Diff & Apply</h3>
+                <p class="text-muted text-sm">AI suggestions appear as diffs. Review changes line-by-line before applying them.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10"></path><path d="M12 2a10 10 0 0 1-10 10"></path></svg></div>
+                <h3>Provider Flexibility</h3>
+                <p class="text-muted text-sm">Switch between OpenRouter (GPT-4, Claude) or local Ollama models instantly.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></div>
+                <h3>Global & Legal AI</h3>
+                <p class="text-muted text-sm">Toggle between general reasoning models and those fine-tuned for legal syntax.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <h3>Version History</h3>
+                <p class="text-muted text-sm">Never lose a clause. Automatic snapshots allow you to restore any previous state.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TEMPLATES -->
+    <section id="templates" class="container section-padding" style="border-top: 1px solid var(--border-subtle);">
+        <div class="text-center" style="margin-bottom: 40px;">
+            <h2>Start with a solid foundation</h2>
+        </div>
+        <div class="grid-3">
+            <!-- Template Items -->
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>NDA</h3>
+                    <p class="text-muted text-sm">Standard Mutual Non-Disclosure Agreement.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>Employment Agreement</h3>
+                    <p class="text-muted text-sm">Full-time offer with IP assignment.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>Commercial Lease</h3>
+                    <p class="text-muted text-sm">Standard triple net lease structure.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>Demand Letter</h3>
+                    <p class="text-muted text-sm">Formal notice of breach and demand.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>Privacy Policy</h3>
+                    <p class="text-muted text-sm">GDPR & CCPA compliant baseline.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+            <div class="card template-card">
+                <div>
+                    <div class="doc-icon"></div>
+                    <h3>Terms of Service</h3>
+                    <p class="text-muted text-sm">SaaS-focused terms and conditions.</p>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;">Start Draft</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security" class="container section-padding">
+        <div class="grid-2 items-center">
+            <div>
+                <h2>Enterprise-grade Security</h2>
+                <p class="text-muted" style="margin-bottom: 24px;">Your data is your liability. We give you the tools to manage it safely.</p>
+                <ul class="security-list">
+                    <li>
+                        <div class="check-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <span>AES-256 Encryption at rest and TLS 1.3 in transit.</span>
+                    </li>
+                    <li>
+                        <div class="check-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <span>Granular role-based access control (RBAC).</span>
+                    </li>
+                    <li>
+                        <div class="check-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <span>Comprehensive audit logs for all AI interactions.</span>
+                    </li>
+                    <li>
+                        <div class="check-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <span>Self-host option: Data never leaves your VPC.</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="security-glance">
+                <svg class="lock-big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h3 style="font-size: 1.5rem;">SOC 2 Type II</h3>
+                <p class="text-muted">Compliance Ready</p>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-ghost">Download Security Paper &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOG -->
+    <section class="container section-padding" style="background-color: var(--bg-surface-secondary); border-radius: var(--radius-lg); margin: 40px auto;">
+        <div class="flex justify-between items-center" style="margin-bottom: 30px;">
+            <h2>Latest Updates</h2>
+            <a href="/blog" class="btn btn-ghost">View all</a>
+        </div>
+        <div class="grid-3">
+            <div class="card" style="border:none;">
+                <div class="blog-img-placeholder" style="background: #e0e7ff;"></div>
+                <div class="blog-meta"><span class="tag">Engineering</span> <span>•</span> <span>Oct 12, 2023</span></div>
+                <h3>Improving RAG for Case Law</h3>
+                <p class="text-muted text-sm">How we optimized retrieval augmented generation specifically for citations.</p>
+            </div>
+            <div class="card" style="border:none;">
+                <div class="blog-img-placeholder" style="background: #fef3c7;"></div>
+                <div class="blog-meta"><span class="tag">Product</span> <span>•</span> <span>Sep 28, 2023</span></div>
+                <h3>Introducing Diff View 2.0</h3>
+                <p class="text-muted text-sm">Visualizing changes in complex nested clauses just got easier.</p>
+            </div>
+            <div class="card" style="border:none;">
+                <div class="blog-img-placeholder" style="background: #d1fae5;"></div>
+                <div class="blog-meta"><span class="tag">Tutorial</span> <span>•</span> <span>Sep 15, 2023</span></div>
+                <h3>Using Ollama locally with LexDraft</h3>
+                <p class="text-muted text-sm">A guide to setting up Llama 3 on your local machine for total privacy.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="container section-padding">
+        <div class="text-center" style="margin-bottom: 60px;">
+            <h2>Simple, transparent pricing</h2>
+        </div>
+        <div class="grid-3">
+            <div class="card pricing-card">
+                <h3>Starter</h3>
+                <div class="price">$0</div>
+                <p class="period">Free forever</p>
+                <p class="text-muted text-sm" style="margin: 20px 0;">Perfect for solo practitioners testing the waters.</p>
+                <ul class="text-sm text-muted" style="text-align: left; width: 100%; margin-bottom: 24px;">
+                    <li>• 3 Active Projects</li>
+                    <li>• Basic Templates</li>
+                    <li>• Community Support</li>
+                </ul>
+                <a href="/app/login" class="btn btn-secondary" style="width: 100%">Get Started</a>
+            </div>
+            <div class="card pricing-card highlight">
+                <h3>Team</h3>
+                <div class="price">$49</div>
+                <p class="period">per user / month</p>
+                <p class="text-muted text-sm" style="margin: 20px 0;">For small firms requiring collaboration.</p>
+                <ul class="text-sm text-muted" style="text-align: left; width: 100%; margin-bottom: 24px;">
+                    <li>• Unlimited Projects</li>
+                    <li>• Collaborative Editing</li>
+                    <li>• Priority Support</li>
+                    <li>• Advanced AI Models</li>
+                </ul>
+                <a href="/app" class="btn btn-primary" style="width: 100%">Start Free Trial</a>
+            </div>
+            <div class="card pricing-card">
+                <h3>On-Prem</h3>
+                <div class="price">Custom</div>
+                <p class="period">annual billing</p>
+                <p class="text-muted text-sm" style="margin: 20px 0;">Full control for enterprise compliance.</p>
+                <ul class="text-sm text-muted" style="text-align: left; width: 100%; margin-bottom: 24px;">
+                    <li>• Self-hosted Docker</li>
+                    <li>• Ollama / Local LLM</li>
+                    <li>• SSO / SAML</li>
+                    <li>• SLA</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="width: 100%">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="logo" style="margin-bottom: 16px;">
+                        <div class="logo-icon"></div>
+                        <span>LexDraft</span>
+                    </div>
+                    <p class="text-sm">The modern workspace for legal professionals. <br>Draft smarter, not harder.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm" style="margin-bottom: 16px;">Product</h4>
+                    <ul class="footer-links text-sm">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#">Changelog</a></li>
+                        <li><a href="#">Docs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm" style="margin-bottom: 16px;">Company</h4>
+                    <ul class="footer-links text-sm">
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm" style="margin-bottom: 16px;">Legal</h4>
+                    <ul class="footer-links text-sm">
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Security</a></li>
+                        <li><a href="#">DPA</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="disclaimer">
+                <p>© 2023 LexDraft Inc. All rights reserved.</p>
+                <p style="margin-top: 8px;">LexDraft is an AI productivity tool and does not provide legal advice. Always consult a qualified attorney.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple Theme Toggle Logic
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // Check local storage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            body.className = savedTheme;
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            body.className = 'dark-mode';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark-mode');
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                localStorage.setItem('theme', 'light-mode');
+            }
+        });
+    </script>
+</body>
+</html>
