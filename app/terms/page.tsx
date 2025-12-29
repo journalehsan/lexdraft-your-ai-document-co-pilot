@@ -3,19 +3,19 @@ import { Footer } from '@/components/marketing/Footer';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 font-serif text-foreground antialiased selection:bg-blue-900/20 dark:selection:bg-blue-400/20 flex flex-col">
       <Header />
 
       <main className="flex-1">
         <section className="py-20 md:py-32">
           <div className="container">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Terms of Service</h1>
-              <p className="text-lg text-muted-foreground mb-12">
+              <h1 className="text-4xl md:text-5xl font-light text-blue-950 dark:text-blue-100 mb-6">Terms of Service</h1>
+              <p className="text-lg text-slate-600 dark:text-slate-400 mb-12 font-light">
                 Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
 
-              <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
+              <div className="prose prose-lg dark:prose-invert max-w-none space-y-8 prose-headings:font-light prose-p:font-light prose-li:font-light prose-headings:text-blue-950 dark:prose-headings:text-blue-100 prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-li:text-slate-700 dark:prose-li:text-slate-300 prose-h2:text-3xl prose-h3:text-2xl">
                 <div>
                   <h2>1. Acceptance of Terms</h2>
                   <p>
