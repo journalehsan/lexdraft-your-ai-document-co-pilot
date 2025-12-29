@@ -11,8 +11,9 @@ import { DocumentsProvider } from "./stores/DocumentStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PermissionRoute from "./components/auth/PermissionRoute";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import LoginPage from "./auth/pages/LoginPage";
+import RegisterPage from "./auth/pages/RegisterPage";
+import CallbackPage from "./auth/pages/CallbackPage";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -33,8 +34,9 @@ const App = () => (
               <Sonner />
               <BrowserRouter basename="/app" future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/auth/callback" element={<CallbackPage />} />
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Index />
