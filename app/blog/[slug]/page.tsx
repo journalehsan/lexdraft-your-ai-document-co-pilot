@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const publishedDate = new Date(post.date).toISOString();
 
   return {
-    title: `${post.title} | LexDraft Blog`,
+    title: `${post.title} | LexDraft Legal & AI Blog`,
     description: post.description,
     alternates: {
       canonical: url,
@@ -93,66 +93,66 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-serif text-foreground antialiased selection:bg-blue-900/20 flex flex-col">
         <Header />
 
         <main className="flex-1">
-          <article className="container mx-auto px-4 py-12 lg:py-20 max-w-6xl">
-            <div className="flex flex-col lg:flex-row gap-12">
-              <div className="flex-1 min-w-0">
+          <article className="container mx-auto px-4 py-16 lg:py-24 max-w-7xl">
+            <div className="flex flex-col xl:flex-row gap-20 lg:items-start">
+              <div className="flex-1 min-w-0 xl:max-w-4xl">
                 <Link
                   href="/blog"
-                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
+                  className="inline-flex items-center gap-3 text-sm text-slate-600 hover:text-blue-700 mb-8 transition-colors font-light"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Blog
+                  Back to Legal & AI Insights
                 </Link>
 
-                <header className="mb-12">
-                  <div className="flex flex-wrap gap-2 mb-6">
+                <header className="mb-16">
+                  <div className="flex flex-wrap gap-3 mb-8">
                     {post.tags.map((tag) => (
                       <Link
                         key={tag}
                         href={`/blog?tag=${encodeURIComponent(tag)}`}
-                        className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/20 hover:bg-primary/10 transition-colors"
+                        className="text-xs font-light uppercase tracking-wider px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
                       >
                         {tag}
                       </Link>
                     ))}
                   </div>
-                  <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-8 leading-[1.15]">
+                  <h1 className="text-4xl md:text-6xl font-light tracking-tight mb-8 leading-[1.1] text-blue-950">
                     {post.title}
                   </h1>
-                  <div className="flex items-center justify-between py-6 border-y flex-wrap gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                  <div className="flex items-center justify-between py-8 border-y border-slate-200 flex-wrap gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-light text-lg">
                         {post.author.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-semibold text-sm">{post.author}</div>
-                        <div className="text-xs text-muted-foreground">Author</div>
+                        <div className="font-medium text-slate-800 text-sm">{post.author}</div>
+                        <div className="text-xs text-slate-500 font-light">Legal & AI Expert</div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                    <div className="text-sm text-slate-600 font-light flex items-center gap-6 flex-wrap">
+                      <span className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-blue-600" />
                         {formattedDate}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                      <span className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-blue-600" />
                         {post.readTime}
                       </span>
                     </div>
                   </div>
                 </header>
 
-                <div className="prose prose-lg dark:prose-invert max-w-3xl">
+                <div className="prose prose-lg prose-slate max-w-none font-light prose-headings:font-normal prose-h1:text-3xl prose-h1:text-blue-950 prose-h2:text-2xl prose-h2:text-blue-900 prose-h3:text-xl prose-h3:text-blue-800 prose-p:text-slate-700 prose-p:leading-relaxed prose-li:text-slate-700 prose-li:leading-relaxed prose-a:text-blue-700 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-blue-200 prose-blockquote:bg-blue-50/30 prose-blockquote:pl-6 prose-blockquote:py-2 prose-blockquote:my-6 prose-blockquote:font-light prose-blockquote:text-slate-600 prose-strong:text-blue-900 prose-code:text-blue-700 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded prose-hr:border-slate-200">
                   <MDXRemote source={post.content} />
                 </div>
 
-                <div className="mt-16 pt-8 border-t">
+                <div className="mt-20 pt-12 border-t border-slate-200">
                   <div className="flex items-center gap-4 mb-8">
-                    <span className="text-sm font-bold text-muted-foreground">Share this article:</span>
+                    <span className="text-sm font-light text-slate-600">Share this legal & AI insight:</span>
                     <ShareButtons
                       title={post.title}
                       url={`https://lexdraft.com/blog/${post.slug}`}
@@ -160,42 +160,56 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   </div>
                 </div>
 
-                  <div className="p-8 rounded-2xl bg-muted/30 border flex gap-6 flex-col sm:flex-row">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl shrink-0">
-                      {post.author.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-lg mb-2">Written by {post.author}</h4>
-                      <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                        Expert insights on AI-powered writing, document productivity, and best practices for
-                        modern teams.
-                      </p>
+                <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-200 flex gap-8 flex-col sm:flex-row shadow-sm">
+                  <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-light text-2xl shrink-0 shadow-sm">
+                    {post.author.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="font-light text-2xl mb-3 text-blue-950">Written by {post.author}</h4>
+                    <p className="text-slate-600 text-base mb-4 leading-relaxed font-light">
+                      Expert insights on AI-powered legal document drafting, modern productivity tools, and the future of intelligent document engineering for professionals.
+                    </p>
+                    <div className="flex gap-4 text-sm text-slate-500 font-light">
+                      <span>• Legal Document Expert</span>
+                      <span>• AI Technology Specialist</span>
+                      <span>• Productivity Consultant</span>
                     </div>
                   </div>
-
-                  {relatedPosts.length > 0 && (
-                    <div className="mt-12">
-                      <h3 className="text-xl font-bold mb-6">Related Articles</h3>
-                      <div className="grid gap-4 md:grid-cols-3">
-                        {relatedPosts.map((related) => (
-                          <Link
-                            key={related.slug}
-                            href={`/blog/${related.slug}`}
-                            className="group p-4 rounded-xl border bg-muted/30 hover:bg-muted/50 transition-colors"
-                          >
-                            <h4 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2 mb-2">
-                              {related.title}
-                            </h4>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{related.description}</p>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {relatedPosts.length > 0 && (
+                  <div className="mt-20">
+                    <div className="flex items-center gap-3 mb-8">
+                      <span className="w-8 h-[1px] bg-blue-900"></span>
+                      <h3 className="text-2xl font-light text-blue-950">Related Legal & AI Articles</h3>
+                      <span className="w-8 h-[1px] bg-blue-900"></span>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-3">
+                      {relatedPosts.map((related) => (
+                        <Link
+                          key={related.slug}
+                          href={`/blog/${related.slug}`}
+                          className="group p-6 rounded-2xl border border-slate-200 bg-white hover:bg-blue-50/30 hover:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md"
+                        >
+                          <h4 className="font-light text-lg group-hover:text-blue-900 transition-colors line-clamp-2 mb-3 leading-tight">
+                            {related.title}
+                          </h4>
+                          <p className="text-sm text-slate-600 line-clamp-3 font-light leading-relaxed">{related.description}</p>
+                          <div className="mt-4 flex items-center gap-2 text-xs text-blue-600 font-light group-hover:text-blue-800 transition-colors">
+                            Read more
+                            <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <ArticleSidebar post={post} tags={tags} popularPosts={popularPosts} />
+            </div>
           </article>
         </main>
 
@@ -224,20 +238,21 @@ function ArticleSidebar({
     }) || [];
 
   return (
-    <aside className="hidden lg:block xl:w-64 shrink-0">
-      <div className="sticky top-28 space-y-10">
+    <aside className="hidden xl:block xl:w-80 shrink-0">
+      <div className="sticky top-32 space-y-12">
         {headings.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
-              Table of Contents
-            </h4>
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 text-blue-900 font-light text-sm mb-4 tracking-wider">
+              <span className="w-6 h-[1px] bg-blue-900"></span>
+              CONTENTS
+            </div>
             <nav className="space-y-3">
               {headings.map((heading, i) => (
                 <a
                   key={i}
                   href={`#${heading.id}`}
-                  className={`block text-sm text-muted-foreground hover:text-primary transition-colors ${
-                    heading.level === 3 ? 'pl-4' : heading.level === 4 ? 'pl-8' : ''
+                  className={`block text-sm text-slate-600 hover:text-blue-700 transition-colors font-light ${
+                    heading.level === 3 ? 'pl-6' : heading.level === 4 ? 'pl-10' : ''
                   }`}
                 >
                   {heading.text}
@@ -247,30 +262,37 @@ function ArticleSidebar({
           </div>
         )}
 
-        <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
-          <h4 className="font-bold text-sm mb-2 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            Try LexDraft
-          </h4>
-          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-            Automate your legal drafting with context-aware AI.
+        <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-white shadow-lg">
+          <div className="flex items-center gap-2 text-blue-200 font-light text-sm mb-3 tracking-wider">
+            <CheckCircle2 className="h-4 w-4" />
+            TRY LEXDRAFT
+          </div>
+          <h4 className="font-light text-xl mb-4 text-white">Start Creating Better Documents Today</h4>
+          <p className="text-blue-200 text-sm mb-6 leading-relaxed font-light">
+            Experience AI-powered legal document drafting with our intelligent WYSIWYG editor.
           </p>
           <Link
             href="/app"
-            className="w-full bg-primary text-primary-foreground text-xs font-bold py-2 rounded-lg hover:opacity-90 inline-flex items-center justify-center"
+            className="w-full bg-white text-blue-900 font-light py-3 rounded-lg hover:bg-blue-50 transition-colors inline-flex items-center justify-center text-sm"
           >
             Get Started Free
           </Link>
+          <p className="text-xs text-blue-300 text-center mt-4 font-light">
+            No credit card required
+          </p>
         </div>
 
-        <div>
-          <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Popular Topics</h4>
+        <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2 text-slate-700 font-light text-sm mb-4 tracking-wider">
+            <span className="w-6 h-[1px] bg-slate-400"></span>
+            EXPLORE TOPICS
+          </div>
           <div className="flex flex-wrap gap-2">
-            {tags.slice(0, 6).map((tag) => (
+            {tags.slice(0, 8).map((tag) => (
               <Link
                 key={tag}
                 href={`/blog?tag=${encodeURIComponent(tag)}`}
-                className="px-3 py-1 rounded-full border bg-background hover:bg-accent text-sm transition-colors"
+                className="px-4 py-2 rounded-full border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-sm transition-all font-light"
               >
                 {tag}
               </Link>
@@ -279,24 +301,40 @@ function ArticleSidebar({
         </div>
 
         {popularPosts.length > 0 && (
-          <div>
-            <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-muted-foreground">
-              Most Read
-            </h4>
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-700 font-light text-sm mb-6 tracking-wider">
+              <span className="w-6 h-[1px] bg-slate-400"></span>
+              MOST READ
+            </div>
             <div className="space-y-4">
               {popularPosts.map((p, i) => (
                 <Link key={p.slug} href={`/blog/${p.slug}`} className="group block cursor-pointer">
-                  <span className="text-xs text-muted-foreground block mb-1">
-                    0{i + 1}
-                  </span>
-                  <h4 className="text-sm font-semibold group-hover:text-primary transition-colors leading-tight">
-                    {p.title}
-                  </h4>
+                  <div className="flex gap-3">
+                    <span className="text-lg font-light text-blue-900/30 group-hover:text-blue-900/60 transition-colors">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <h4 className="text-sm font-light text-slate-700 group-hover:text-blue-900 transition-colors leading-tight">
+                      {p.title}
+                    </h4>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         )}
+
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 shadow-sm">
+          <h4 className="font-light text-lg mb-4 text-blue-950">About LexDraft</h4>
+          <p className="text-slate-600 text-sm leading-relaxed mb-4 font-light">
+            The AI-powered document co-pilot that combines intelligent drafting assistance with professional-grade WYSIWYG editing tools for modern professionals.
+          </p>
+          <div className="flex flex-col gap-2 text-xs text-slate-500 font-light">
+            <span>✓ AI-Powered Writing</span>
+            <span>✓ Legal Document Templates</span>
+            <span>✓ WYSIWYG Editor</span>
+            <span>✓ Team Collaboration</span>
+          </div>
+        </div>
       </div>
     </aside>
   );
