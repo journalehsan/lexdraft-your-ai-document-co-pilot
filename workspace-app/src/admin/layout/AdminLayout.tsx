@@ -28,10 +28,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   useEffect(() => {
-    // Check system preference on mount
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-    }
+    // Always default to light theme for now
+    setTheme('light');
   }, []);
 
   useEffect(() => {
